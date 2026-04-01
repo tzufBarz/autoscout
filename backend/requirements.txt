@@ -1,0 +1,9 @@
+fastapi
+ultralytics
+numpy
+Levenshtein
+tqdm
+scipy
+opencv-python
+uvicorn
+python-multipart
