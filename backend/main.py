@@ -1,6 +1,9 @@
+from typing import Annotated
+
 import cv2
-from fastapi import FastAPI, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Path
 import uuid, asyncio, shutil
+from uuid import UUID
 import os
 
 from ultralytics import YOLO
@@ -11,6 +14,7 @@ from scipy.ndimage import gaussian_filter1d
 from collections import defaultdict
 
 
+# Constants
 ALLIANCE_WEIGHT = 0.5
 DIGIT_WEIGHT = 1 - ALLIANCE_WEIGHT
 
@@ -22,26 +26,36 @@ TEAM_THRESH = 0.75
 ALLIANCE_MASK = (np.arange(6) // 3)
 
 
+# Match schedule: the teams in each alliance (blue followed by red) for each match number
 schedule = {
     1: [
-        "5951", "3339", "4320", # Blue
-        "5654", "1690", "5990"   # Red
+        "5951", "3339", "4320",
+        "5654", "1690", "5990",
     ]
 }
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Load models
 model = YOLO(os.path.join(BASE_DIR, "models/robots.pt"))
 digit_model = YOLO(os.path.join(BASE_DIR, "models/digits.pt"))
 
-
+# FastAPI setup
 app = FastAPI()
 
 jobs = {}
 
 @app.post("/upload")
-async def upload(file: UploadFile, match: int = Form()):
-    job_id = str(uuid.uuid4())
+async def upload(file: Annotated[UploadFile, File(description="The video file")], match: Annotated[int, Form(description="The match number")]):
+    """
+    Upload a new video and begin tracking.
+    Args:
+        file: The video file.
+        match: The match number.
+    Returns:
+        UUID: The ID for this job.
+    """
+    job_id = uuid.uuid4()
     path = f"/tmp/{job_id}.mp4"
     with open(path, "wb") as f:
         shutil.copyfileobj(file.file, f)
@@ -50,10 +64,24 @@ async def upload(file: UploadFile, match: int = Form()):
     return {"job_id": job_id}
 
 @app.get("/status/{job_id}")
-async def status(job_id: str):
+async def status(job_id: Annotated[UUID, Path(description="The job's UUID")]):
+    """
+    Get the current status of a job.
+    Args:
+        job_id: The job's UUID.
+    Returns:
+        The job's current status and data if available.
+    """
     return jobs.get(job_id, {"status": "not_found"})
 
-async def process(job_id: str, path: str, match: int):
+async def process(job_id: UUID, path: str, match: int):
+    """
+    Process a tracking job.
+    Args:
+        job_id: The job's UUID.
+        path: The video file's path.
+        match: The match number.
+    """
     try:
         def progress_callback(info: dict):
             jobs[job_id]["progress"] = info
@@ -65,11 +93,20 @@ async def process(job_id: str, path: str, match: int):
         jobs[job_id] = {"status": "error", "result": str(e)}
 
 
-def detect_digits(crops: list, digit_model, conf_thresh=0.4) -> list[str | None]:
+def detect_digits(crops: list, digit_model: YOLO, conf_thresh=0.4) -> list[str | None]:
+    """
+    Use batched inference to detect digits on cropped robot images.
+    Args:
+        crops: A list of images, each cropped to one robot.
+        digit_model: A model that detects individual digits.
+        conf_thresh: The confidence threshold for allowing digit detections.
+    Returns:
+        A list containing a string of the digits detected from left to right, for each image.
+    """
     if not crops:
         return []
 
-    batch_results = digit_model(crops, conf=conf_thresh, verbose=False)
+    batch_results = digit_model(crops, conf=conf_thresh, verbose=False, stream=True)
 
     output = []
     for results in batch_results:
@@ -93,6 +130,15 @@ def detect_digits(crops: list, digit_model, conf_thresh=0.4) -> list[str | None]
 
 
 def digit_scores(digits: str, teams: list[str]) -> np.ndarray:
+    """
+    Rank the similarity of detected robot digits with each team's number.
+    Args:
+        digits: The robot's detected bumper digits.
+        teams: A list containing all possible team numbers.
+    Returns:
+        A numpy array with a similarity score for each possible number,
+        calculated using normalized levenshtein distance.
+    """
     scores = np.zeros(6)
     for i, team in enumerate(teams):
         dist = Levenshtein.distance(digits, team)
@@ -102,7 +148,18 @@ def digit_scores(digits: str, teams: list[str]) -> np.ndarray:
     return scores
 
 
-def update(track: int, teams: list[str], alliance: int, digits: str, track_votes: dict, track_teams: dict, team_tracks) -> None:
+def update(track: int, teams: list[str], alliance: int, digits: str, track_votes: dict, track_teams: dict, team_tracks: np.ndarray) -> None:
+    """
+    Update an unrecognized track's votes and match to a team when possible.
+    Args:
+        track: The track's ID.
+        teams: The numbers of the 6 teams in this match, blue alliance followed by red alliance.
+        alliance: The robot's detected alliance color.
+        digits: The robot's detected bumper digits.
+        track_votes: A state dictionary, accumulating votes to every possible team in a numpy array for each track ID.
+        track_teams: A state dictionary, containing each track's chosen team index.
+        team_tracks: A state numpy array, containing the current track ID of each team.
+    """
     votes = (digit_scores(digits, teams) * DIGIT_WEIGHT) + \
         ((ALLIANCE_MASK == alliance) * ALLIANCE_WEIGHT)
     if track not in track_votes:
@@ -114,11 +171,19 @@ def update(track: int, teams: list[str], alliance: int, digits: str, track_votes
         team_tracks[match] = track
 
 
-def smooth_and_interpolate(positions, sigma=5):
+def smooth_and_interpolate(positions: list, sigma=5):
+    """
+    Average duplicate detections, interpolate in gaps and smoothen with a gaussian filter.
+    Args:
+        positions: Input positions for each frame.
+        sigma: Gaussian filter sigma value.
+    Returns:
+        Smoothened and interpolated positions, including each frame from first to last known point.
+    """
     if not positions:
         return {}
 
-    # Step 1: average duplicate/close frames (in case a track has multiple hits per frame)
+    # Average duplicate/close frames (in case a track has multiple hits per frame)
     frame_buckets = defaultdict(list)
     for f, x, y in positions:
         frame_buckets[f].append((x, y))
@@ -126,12 +191,12 @@ def smooth_and_interpolate(positions, sigma=5):
     known = {f: np.mean(pts, axis=0) for f, pts in frame_buckets.items()}
     known_frames = sorted(known.keys())
 
-    # Step 2: interpolate across all frames between first and last known point
+    # Interpolate across all frames between first and last known point
     all_frames = np.arange(known_frames[0], known_frames[-1] + 1)
     xs = np.interp(all_frames, known_frames, [known[f][0] for f in known_frames])
     ys = np.interp(all_frames, known_frames, [known[f][1] for f in known_frames])
 
-    # Step 3: gaussian smooth the interpolated signal
+    # Gaussian smooth the interpolated signal
     xs = gaussian_filter1d(xs, sigma=sigma)
     ys = gaussian_filter1d(ys, sigma=sigma)
 
@@ -139,6 +204,21 @@ def smooth_and_interpolate(positions, sigma=5):
 
 
 def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> dict:
+    """
+    Run the tracking pipeline.
+    Args:
+        video_path: The video file path.
+        match_number: The match number.
+        progress_callback: A callback for updating status progress, receiving the new info after each iteration.
+    Returns:
+        A dictionary containing results and video data:
+            - 'teams': The list of team numbers for this match, blue alliance followed by red alliance.
+            - 'frame_count': Total video frames.
+            - 'fps': Video frame rate.
+            - 'frame_width': Video frame width.
+            - 'frame_height': Video frame height.
+            - 'trajectories': A dictionary containing a list of positions with frame positioning for each robot.
+    """
     cap = cv2.VideoCapture(video_path)
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
