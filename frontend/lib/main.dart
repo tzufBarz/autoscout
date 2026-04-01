@@ -201,12 +201,9 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
       if (_status == 'processing') {
         _realFrame = data['progress']?['frame']?.toInt() ?? _realFrame;
         _estimatedFrame = _realFrame.toDouble();
-        final newItPerS = data['progress']?['it_per_s']?.toDouble();
-        if (newItPerS != null) {
-          _itPerS = _itPerS == null ? newItPerS : _itPerS! * 0.8 + newItPerS * 0.2;
-        }
+        _itPerS = data['progress']?['it_per_s']?.toDouble() ?? 0;
         _totalFrames ??= data['progress']?['total'].toInt();
-        _eta = data['progress']?['eta'].toDouble();
+        _eta = data['progress']?['eta']?.toDouble() ?? double.infinity;
       } else if (_status == 'done') {
         _results = data['result'];
         _ticker?.stop();
