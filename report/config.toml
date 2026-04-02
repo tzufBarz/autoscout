@@ -1,0 +1,6 @@
+[snippets]
+sources = [
+  "backend/*.py",
+  "frontend/lib/**/*.dart",
+]
+output = "report/build/snippets/"
