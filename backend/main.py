@@ -150,7 +150,6 @@ def digit_scores(digits: str, teams: list[str]) -> np.ndarray:
     return scores
 
 
-# <<voting_system>>
 def update(track: int, teams: list[str], alliance: int, digits: str, track_votes: dict, track_teams: dict, team_tracks: np.ndarray) -> None:
     """
     Update an unrecognized track's votes and match to a team when possible.
@@ -163,6 +162,7 @@ def update(track: int, teams: list[str], alliance: int, digits: str, track_votes
         track_teams: A state dictionary, containing each track's chosen team index.
         team_tracks: A state numpy array, containing the current track ID of each team.
     """
+    # <<voting_system>>
     votes = (digit_scores(digits, teams) * DIGIT_WEIGHT) + \
         ((ALLIANCE_MASK == alliance) * ALLIANCE_WEIGHT)
     if track not in track_votes:
@@ -172,7 +172,7 @@ def update(track: int, teams: list[str], alliance: int, digits: str, track_votes
     if track_votes[track][match] >= TEAM_THRESH:
         track_teams[track] = match
         team_tracks[match] = track
-# <</voting_system>>
+    ## <</voting_system>>
 
 
 def smooth_and_interpolate(positions: list, total_duration_ms: float, target_hz: float = 50, sigma=5):

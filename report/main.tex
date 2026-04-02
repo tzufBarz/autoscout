@@ -1,0 +1,42 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{color}
+\usepackage{float}
+\usepackage{framed}
+\usepackage{lineno}
+\usepackage{fancyvrb}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+
+\setmainlanguage{hebrew}
+\setotherlanguage{english}
+
+\newfontfamily\hebrewfonttt[Script=Hebrew]{David CLM}
+\setmainfont{David CLM}
+
+\definecolor{codebg}{RGB}{245, 245, 245}
+
+\usepackage[outputdir=build, cachedir=.minted]{minted}
+\setminted{
+    fontfamily=tt,
+    breaklines=true,
+    autogobble=true,
+    fontsize=\footnotesize,
+    bgcolor=codebg
+}
+
+\begin{document}
+
+\title{\textenglish{AutoScout}: סקאוטינג אוטומטי ל-FRC}
+\author{צוף ברזילי}
+\date{}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{הקדמה}
+\input{sections/introduction}
+
+\end{document}
