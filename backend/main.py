@@ -25,6 +25,8 @@ TEAM_THRESH = 0.75
 
 ALLIANCE_MASK = (np.arange(6) // 3)
 
+SAMPLE_RATE = 50 # Hz
+
 
 # Match schedule: the teams in each alliance (blue followed by red) for each match number
 schedule = {
@@ -171,36 +173,44 @@ def update(track: int, teams: list[str], alliance: int, digits: str, track_votes
         team_tracks[match] = track
 
 
-def smooth_and_interpolate(positions: list, sigma=5):
+def smooth_and_interpolate(positions: list, total_duration_ms: float, target_hz: float = 50, sigma=5):
     """
-    Average duplicate detections, interpolate in gaps and smoothen with a gaussian filter.
+    Average duplicate detections, interpolate in gaps and smooth with a gaussian filter.
     Args:
-        positions: Input positions for each frame.
+        positions: Input positions for each frame with a timestamp.
+        total_duration_ms: The total video duration.
+        target_hz: Output sample rate.
         sigma: Gaussian filter sigma value.
     Returns:
-        Smoothened and interpolated positions, including each frame from first to last known point.
+        Smoothed and interpolated positions, evenly spaced in the target sample rate.
     """
     if not positions:
-        return {}
+        return []
 
     # Average duplicate/close frames (in case a track has multiple hits per frame)
-    frame_buckets = defaultdict(list)
-    for f, x, y in positions:
-        frame_buckets[f].append((x, y))
-    
-    known = {f: np.mean(pts, axis=0) for f, pts in frame_buckets.items()}
-    known_frames = sorted(known.keys())
+    timestamp_buckets = defaultdict(list)
+    for t, x, y in positions:
+        timestamp_buckets[t].append((x, y))
 
-    # Interpolate across all frames between first and last known point
-    all_frames = np.arange(known_frames[0], known_frames[-1] + 1)
-    xs = np.interp(all_frames, known_frames, [known[f][0] for f in known_frames])
-    ys = np.interp(all_frames, known_frames, [known[f][1] for f in known_frames])
+    known = {t: np.mean(pts, axis=0) for t, pts in timestamp_buckets.items()}
+    known_times = np.array(sorted(known.keys()))
 
-    # Gaussian smooth the interpolated signal
+    relative_times = known_times - known_times[0]
+
+    # Generate evenly spaced time points
+    num_samples = int((total_duration_ms / 1000) * target_hz)
+    sample_times = np.linspace(0, total_duration_ms, num_samples)
+
+    known_coords = np.array([known[t] for t in known_times])
+
+    xs = np.interp(sample_times, known_times, known_coords[:, 0])
+    ys = np.interp(sample_times, known_times, known_coords[:, 1])
+
+    # Smooth the signal (only works well if the robot is on screen)
     xs = gaussian_filter1d(xs, sigma=sigma)
     ys = gaussian_filter1d(ys, sigma=sigma)
 
-    return dict(zip(all_frames, zip(xs, ys)))
+    return list(zip(xs, ys))
 
 
 def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> dict:
@@ -213,39 +223,48 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
     Returns:
         A dictionary containing results and video data:
             - 'teams': The list of team numbers for this match, blue alliance followed by red alliance.
-            - 'frame_count': Total video frames.
-            - 'fps': Video frame rate.
+            - 'duration': Video duration.
+            - 'sample_rate': The rate of output position sampling in Hz.
             - 'frame_width': Video frame width.
             - 'frame_height': Video frame height.
-            - 'trajectories': A dictionary containing a list of positions with frame positioning for each robot.
+            - 'trajectories': A dictionary containing a list of timestamped positions for each robot.
     """
     cap = cv2.VideoCapture(video_path)
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
-    cap.release()
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count - 1)
+    cap.grab()
+    duration = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
     teams = schedule[match_number]
-
-    results = model.track(
-        source=video_path,
-        tracker=os.path.join(BASE_DIR, "frc_botsort.yaml"),
-        persist=True,
-        stream=True,
-        verbose=False,
-        conf=0.1
-    )
 
     track_votes = {}
     track_teams = {}
     team_tracks = np.zeros(6, dtype=int)
 
-
     track_positions = {}
 
+
     with tqdm(total=frame_count) as pbar:
-        for frame_idx, result in tqdm(enumerate(results)):
+        while cap.isOpened():
+            success, frame = cap.read()
+            if not success or frame is None:
+                break
+
+            timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
+            results = model.track(
+                source=frame,
+                persist=True,
+                tracker=os.path.join(BASE_DIR, "frc_botsort.yaml"),
+                verbose=False,
+                conf=0.1
+            )
+
+            result = results[0]
+
+
             if not result.boxes or result.boxes.xyxy is None or result.boxes.id is None or result.boxes.cls is None:
                 continue
 
@@ -273,7 +292,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
                 cy = (y1 + y2) // 2
                 if tid not in track_positions:
                     track_positions[tid] = []
-                track_positions[tid].append((frame_idx, cx, cy))
+                track_positions[tid].append((timestamp, cx, cy))
                 
                 if not tid in track_teams and y2 > y1 and x2 > x1:
                     crops.append(result.orig_img[y1:y2, x1:x2])
@@ -289,15 +308,18 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
             pbar.update()
             if progress_callback:
                 progress_callback({
-                    "frame": frame_idx,
+                    "timestamp": timestamp,
                     "total": frame_count,
-                    "percent": round(frame_idx / frame_count * 100, 1),
+                    "frame": pbar.n,
                     "it_per_s": round(pbar.format_dict.get("rate") or 0, 2),
                     "elapsed": round(pbar.format_dict.get("elapsed") or 0, 1),
-                    "eta": round((frame_count - frame_idx) / pbar.format_dict["rate"], 1)
+                    "eta": round((frame_count - pbar.n) / pbar.format_dict["rate"], 1)
                         if pbar.format_dict.get("rate") else None,
                 })
 
+    cap.release()
+
+    total_ms = duration * 1000
 
     all_frame_positions = []
     for team_idx in range(len(teams)):
@@ -306,19 +328,16 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
         for tid in tids:
             positions.extend(track_positions.get(tid, []))
         positions.sort(key=lambda p: p[0])
-        all_frame_positions.append(smooth_and_interpolate(positions))
+        all_frame_positions.append(smooth_and_interpolate(positions, total_ms))
 
     return {
         "teams": teams,
-        "frame_count": frame_count,
-        "fps": frame_rate,
+        "duration": duration,
+        "sample_rate": SAMPLE_RATE,
         "frame_width": frame_width,
         "frame_height": frame_height,
         "trajectories": {
-            teams[i]: [
-                {"frame": int(f), "x": float(x), "y": float(y)}
-                for f, (x, y) in frame_pos.items()
-            ]
-            for i, frame_pos in enumerate(all_frame_positions)
+            teams[i]: [[float(x), float(y)] for x, y in positions]
+            for i, positions in enumerate(all_frame_positions)
         }
     }

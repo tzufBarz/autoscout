@@ -1,38 +1,42 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 class ReplayWidget extends StatefulWidget {
-  final Map<String, Map<int, Offset>> positionMap;
+  final Map<String, List<Offset>> positionMap;
   final Size frameSize;
-  final int totalFrames;
+  final double sampleRate;
+  final double duration;
 
   const ReplayWidget({
     super.key,
     required this.positionMap,
-    required this.totalFrames,
+    required this.duration,
     required this.frameSize,
+    required this.sampleRate,
   });
 
   ReplayWidget.fromResults(Map<String, dynamic> results, {Key? key})
     : this(
         key: key,
         positionMap: _buildPositionMap(results),
-        totalFrames: results['frame_count'],
+        duration: (results['duration'] as num).toDouble(),
         frameSize: Size((results['frame_width'] as num).toDouble(), (results['frame_height'] as num).toDouble()),
+        sampleRate: (results['sample_rate'] as num).toDouble(),
       );
 
-  static Map<String, Map<int, Offset>> _buildPositionMap(
+  static Map<String, List<Offset>> _buildPositionMap(
     Map<String, dynamic> results,
   ) {
     return (results['trajectories'] as Map<String, dynamic>).map(
-      (team, traj) => MapEntry(team, {
+      (team, traj) => MapEntry(team, [
         for (final pos in traj)
-          pos['frame']: Offset(
-            (pos['x'] as num).toDouble(),
-            (pos['y'] as num).toDouble(),
+          Offset(
+            (pos[0] as num).toDouble(),
+            (pos[1] as num).toDouble(),
           ),
-      }),
+      ]),
     );
   }
 
@@ -40,8 +44,44 @@ class ReplayWidget extends StatefulWidget {
   State<StatefulWidget> createState() => _ReplayWidgetState();
 }
 
-class _ReplayWidgetState extends State<ReplayWidget> {
-  int _currentFrame = 0;
+class _ReplayWidgetState extends State<ReplayWidget> with SingleTickerProviderStateMixin {
+  double _currentTime = 0;
+  double _startingTime = 0;
+  bool _isPlaying = false;
+
+  Ticker? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker(_onTick);
+  }
+
+  void _togglePlay() {
+    if (_isPlaying) {
+      _ticker?.stop();
+    } else {
+      _startingTime = _currentTime;
+      _ticker?.start();
+    }
+    setState(() => _isPlaying = !_isPlaying);
+  }
+
+  void _onTick(Duration elapsed) {
+    setState(() {
+      _currentTime = (_startingTime + elapsed.inMilliseconds / 1000).clamp(0.0, widget.duration);
+      if (_currentTime >= widget.duration) {
+        _isPlaying = false;
+        _ticker?.stop();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +91,7 @@ class _ReplayWidgetState extends State<ReplayWidget> {
           child: CustomPaint(
             painter: _ReplayPainter(
               positions: widget.positionMap,
-              frame: _currentFrame,
+              idx: _currentTime * widget.sampleRate,
               frameSize: widget.frameSize,
               backgroundColor: Theme.of(context).colorScheme.surfaceContainer
             ),
@@ -59,23 +99,30 @@ class _ReplayWidgetState extends State<ReplayWidget> {
           ),
         ),
         Slider(
-          value: _currentFrame.toDouble(),
+          value: _currentTime.toDouble(),
           min: 0,
-          max: widget.totalFrames.toDouble(),
-          onChanged: (v) => setState(() => _currentFrame = v.toInt()),
+          max: widget.duration,
+          onChanged: (v) => setState(() {
+            _currentTime = v.toDouble();
+            if (_isPlaying) {
+              _isPlaying = false;
+              _ticker?.stop();
+            }
+          }),
         ),
+        IconButton(icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow), onPressed: _togglePlay)
       ],
     );
   }
 }
 
 class _ReplayPainter extends CustomPainter {
-  final Map<String, Map<int, Offset>> positions;
-  final int frame;
+  final Map<String, List<Offset>> positions;
+  final double idx;
   final Size frameSize;
   final Color? backgroundColor;
 
-  const _ReplayPainter({required this.positions, required this.frame, required this.frameSize, this.backgroundColor});
+  const _ReplayPainter({required this.positions, required this.idx, required this.frameSize, this.backgroundColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -107,8 +154,11 @@ class _ReplayPainter extends CustomPainter {
       final color = i < 3 ? Colors.blue : Colors.red;
       final paint = Paint()..color = color;
 
-      final pos = entry.value[frame];
-      if (pos == null) continue;
+      final lo = idx.floor().clamp(0, entry.value.length - 1);
+      final hi = idx.ceil().clamp(0, entry.value.length - 1);
+      final t = idx % 1.0;
+
+      final pos = entry.value[lo] * (1 - t) + entry.value[hi] * t;
 
       final scaled = Offset(pos.dx * scale + dx, pos.dy * scale + dy);
 
@@ -137,5 +187,5 @@ class _ReplayPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ReplayPainter old) =>
-      old.frame != frame || old.positions != positions;
+      old.idx != idx || old.positions != positions;
 }
