@@ -244,7 +244,7 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ],
-            ) : _status == 'done' ? ReplayWidget.fromResults(_results) : Text('Error'),
+            ) : _status == 'done' ? ReplayWidget.fromResults(_results) : Text(_status),
           ),
         ),
       ),
