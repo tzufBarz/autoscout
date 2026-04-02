@@ -6,6 +6,7 @@ import uuid, asyncio, shutil
 from uuid import UUID
 import os
 
+from torch import Tensor
 from ultralytics import YOLO
 import numpy as np
 import Levenshtein
@@ -249,6 +250,8 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
     track_positions = {}
 
 
+    tracker = None
+
     with tqdm(total=frame_count) as pbar:
         while cap.isOpened():
             success, frame = cap.read()
@@ -270,11 +273,21 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
             if not result.boxes or result.boxes.xyxy is None or result.boxes.id is None or result.boxes.cls is None:
                 continue
 
-            boxes = result.boxes.xyxy.cpu().numpy()
-            ids = result.boxes.id.cpu().numpy()
-            classes = result.boxes.cls.cpu().numpy()
+            boxes = result.boxes.xyxy
+            if isinstance(boxes, Tensor):
+                boxes = boxes.cpu().numpy()
+            ids = result.boxes.id
+            if isinstance(ids, Tensor):
+                ids = ids.cpu().numpy()
+            classes = result.boxes.cls
+            if isinstance(classes, Tensor):
+                classes = classes.cpu().numpy()
 
-            tracker = model.predictor.trackers[0]
+            if tracker is None:
+                if model.predictor is None or not hasattr(model.predictor, 'trackers'):
+                    raise RuntimeError("Model predictor has not been initialized.")
+                tracker = model.predictor.trackers[0]
+
             alive_ids = set(t.track_id for t in tracker.tracked_stracks)
             lost_ids = set(t.track_id for t in tracker.lost_stracks)
 
