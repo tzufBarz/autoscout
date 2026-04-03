@@ -1,4 +1,6 @@
 \documentclass[12pt, a4paper]{article}
+\setlength{\headheight}{14.49998pt}
+\addtolength{\topmargin}{-2.49998pt}
 
 \usepackage{color}
 \usepackage{float}
@@ -6,8 +8,24 @@
 \usepackage{lineno}
 \usepackage{fancyvrb}
 
+\usepackage[outputdir=build, cachedir=.minted]{minted}
+\setminted{
+    fontfamily=tt,
+    breaklines=true,
+    autogobble=true,
+    fontsize=\small,
+    bgcolor=codebg
+}
+
 \usepackage{fontspec}
 \usepackage{polyglossia}
+
+\usepackage{graphicx}
+\graphicspath{{img/}}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
 
 \setmainlanguage{hebrew}
 \setotherlanguage{english}
@@ -17,18 +35,29 @@
 
 \definecolor{codebg}{RGB}{245, 245, 245}
 
-\usepackage[outputdir=build, cachedir=.minted]{minted}
-\setminted{
-    fontfamily=tt,
-    breaklines=true,
-    autogobble=true,
-    fontsize=\footnotesize,
-    bgcolor=codebg
+
+\parskip=0.5em
+\linespread{1.15}
+\geometry{margin=2.5cm}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{צוף ברזילי}
+\fancyhead[L]{\textenglish{AutoScout}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\pdfstringdefDisableCommands{%
+  \def\textenglish#1{#1}%
 }
 
 \begin{document}
 
-\title{\textenglish{AutoScout}: סקאוטינג אוטומטי ל-FRC}
+\title{
+    \includegraphics[width=0.4\textwidth]{school-logo} \\ [1cm]
+    \textenglish{AutoScout}: סקאוטינג אוטומטי ל־\textenglish{FRC}
+}
 \author{צוף ברזילי}
 \date{}
 \maketitle
