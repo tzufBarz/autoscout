@@ -151,7 +151,7 @@ def digit_scores(digits: str, teams: list[str]) -> np.ndarray:
     return scores
 
 
-def update(track: int, teams: list[str], alliance: int, digits: str, track_votes: dict, track_teams: dict, team_tracks: np.ndarray) -> None:
+def update(track: int, teams: list[str], alliance: int, digits: str, timestamp: float, track_votes: dict, track_teams: dict[int, list[tuple[float, int]]], team_tracks: np.ndarray) -> None:
     """
     Update an unrecognized track's votes and match to a team when possible.
     Args:
@@ -159,21 +159,24 @@ def update(track: int, teams: list[str], alliance: int, digits: str, track_votes
         teams: The numbers of the 6 teams in this match, blue alliance followed by red alliance.
         alliance: The robot's detected alliance color.
         digits: The robot's detected bumper digits.
+        frame_idx: The current timestamp.
         track_votes: A state dictionary, accumulating votes to every possible team in a numpy array for each track ID.
-        track_teams: A state dictionary, containing each track's chosen team index.
+        track_teams: A state dictionary, containing each track's history of chosen team indices.
         team_tracks: A state numpy array, containing the current track ID of each team.
     """
     # <<voting_system>>
+    if track not in track_teams or not track_teams[track]:
+        track_teams[track] = [(timestamp, -1)]
     votes = (digit_scores(digits, teams) * DIGIT_WEIGHT) + \
         ((ALLIANCE_MASK == alliance) * ALLIANCE_WEIGHT)
     if track not in track_votes:
         track_votes[track] = np.zeros(6)
     track_votes[track] = ALPHA * track_votes[track] + BETA * votes
-    match = np.argmax(track_votes[track] * (team_tracks[np.arange(6)] == 0))
+    match = np.argmax(track_votes[track] * (team_tracks == 0))
     if track_votes[track][match] >= TEAM_THRESH:
-        track_teams[track] = match
+        track_teams[track][-1] = (track_teams[track][-1][0], int(match))
         team_tracks[match] = track
-    ## <</voting_system>>
+    # <</voting_system>>
 
 
 def smooth_and_interpolate(positions: list, total_duration_ms: float, target_hz: float = 50, sigma=5):
@@ -197,8 +200,6 @@ def smooth_and_interpolate(positions: list, total_duration_ms: float, target_hz:
 
     known = {t: np.mean(pts, axis=0) for t, pts in timestamp_buckets.items()}
     known_times = np.array(sorted(known.keys()))
-
-    relative_times = known_times - known_times[0]
 
     # Generate evenly spaced time points
     num_samples = int((total_duration_ms / 1000) * target_hz)
@@ -244,10 +245,10 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
     teams = schedule[match_number]
 
     track_votes = {}
-    track_teams = {}
+    track_teams: dict[int, list[tuple[float, int]]] = {}
     team_tracks = np.zeros(6, dtype=int)
 
-    track_positions = {}
+    track_positions: dict[int, list[tuple[float, int, int]]] = {}
 
 
     tracker = None
@@ -259,6 +260,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
                 break
 
             timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
+            frame_idx = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
             results = model.track(
                 source=frame,
                 persist=True,
@@ -294,6 +296,8 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
             for i, track in enumerate(team_tracks):
                 if track != 0 and track not in alive_ids and track not in lost_ids:
                     team_tracks[i] = 0
+                    if track in track_teams:
+                        track_teams[track].append((timestamp, -1))
 
             crops = []
             crop_tracks = []
@@ -309,7 +313,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
                     track_positions[tid] = []
                 track_positions[tid].append((timestamp, cx, cy))
                 
-                if not tid in track_teams and y2 > y1 and x2 > x1:
+                if (tid not in team_tracks) and y2 > y1 and x2 > x1:
                     crops.append(result.orig_img[y1:y2, x1:x2])
                     crop_tracks.append((tid, alliance))
 
@@ -318,17 +322,17 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
             for track, digits in zip(crop_tracks, numbers):
                 if digits:
                     tid, alliance = track
-                    update(tid, teams, alliance, digits, track_votes, track_teams, team_tracks)
+                    update(tid, teams, alliance, digits, timestamp, track_votes, track_teams, team_tracks)
 
             pbar.update()
             if progress_callback:
                 progress_callback({
                     "timestamp": timestamp,
                     "total": frame_count,
-                    "frame": pbar.n,
+                    "frame": frame_idx,
                     "it_per_s": round(pbar.format_dict.get("rate") or 0, 2),
                     "elapsed": round(pbar.format_dict.get("elapsed") or 0, 1),
-                    "eta": round((frame_count - pbar.n) / pbar.format_dict["rate"], 1)
+                    "eta": round((frame_count - frame_idx) / pbar.format_dict["rate"], 1)
                         if pbar.format_dict.get("rate") else None,
                 })
 
@@ -336,14 +340,16 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
 
     total_ms = duration * 1000
 
-    all_frame_positions = []
-    for team_idx in range(len(teams)):
-        tids = [tid for tid, idx in track_teams.items() if idx == team_idx]
-        positions = []
-        for tid in tids:
-            positions.extend(track_positions.get(tid, []))
+    all_positions = [[] for _ in range(6)]
+    for tid, indices in track_teams.items():
+        for i in range(len(indices)):
+            start, idx = indices[i]
+            if idx != -1:
+                end = indices[i + 1][0] if i < len(indices) - 1 else float('inf')
+                all_positions[idx].extend((t, cx, cy) for (t, cx, cy) in track_positions.get(tid, []) if t >= start and t < end)
+
+    for positions in all_positions:
         positions.sort(key=lambda p: p[0])
-        all_frame_positions.append(smooth_and_interpolate(positions, total_ms))
 
     return {
         "teams": teams,
@@ -352,7 +358,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
         "frame_width": frame_width,
         "frame_height": frame_height,
         "trajectories": {
-            teams[i]: [[float(x), float(y)] for x, y in positions]
-            for i, positions in enumerate(all_frame_positions)
+            teams[i]: [[float(x), float(y)] for x, y in smooth_and_interpolate(positions, total_ms)]
+            for i, positions in enumerate(all_positions)
         }
     }
