@@ -2,12 +2,15 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 
 class ReplayWidget extends StatefulWidget {
   final Map<String, List<Offset>> positionMap;
   final Size frameSize;
   final double sampleRate;
   final double duration;
+  final String videoPath;
 
   const ReplayWidget({
     super.key,
@@ -15,15 +18,17 @@ class ReplayWidget extends StatefulWidget {
     required this.duration,
     required this.frameSize,
     required this.sampleRate,
+    required this.videoPath,
   });
 
-  ReplayWidget.fromResults(Map<String, dynamic> results, {Key? key})
+  ReplayWidget.fromResults(Map<String, dynamic> results, {Key? key, required videoPath})
     : this(
         key: key,
         positionMap: _buildPositionMap(results),
         duration: (results['duration'] as num).toDouble(),
         frameSize: Size((results['frame_width'] as num).toDouble(), (results['frame_height'] as num).toDouble()),
         sampleRate: (results['sample_rate'] as num).toDouble(),
+        videoPath: videoPath,
       );
 
   static Map<String, List<Offset>> _buildPositionMap(
@@ -48,12 +53,18 @@ class _ReplayWidgetState extends State<ReplayWidget> with SingleTickerProviderSt
   double _currentTime = 0;
   double _startingTime = 0;
   bool _isPlaying = false;
+  bool _showVideo = false;
+  late final Player _player;
+  late final VideoController _videoController;
 
   Ticker? _ticker;
 
   @override
   void initState() {
     super.initState();
+    _player = Player();
+    _videoController = VideoController(_player);
+    _player.open(Media(widget.videoPath), play: false);
     _ticker = createTicker(_onTick);
   }
 
@@ -70,6 +81,7 @@ class _ReplayWidgetState extends State<ReplayWidget> with SingleTickerProviderSt
   void _onTick(Duration elapsed) {
     setState(() {
       _currentTime = (_startingTime + elapsed.inMilliseconds / 1000).clamp(0.0, widget.duration);
+      if (_showVideo) _player.seek(Duration(milliseconds: (_currentTime * 1000).toInt()));
       if (_currentTime >= widget.duration) {
         _isPlaying = false;
         _ticker?.stop();
@@ -88,14 +100,38 @@ class _ReplayWidgetState extends State<ReplayWidget> with SingleTickerProviderSt
     return Column(
       children: [
         Expanded(
-          child: CustomPaint(
-            painter: _ReplayPainter(
-              positions: widget.positionMap,
-              idx: _currentTime * widget.sampleRate,
-              frameSize: widget.frameSize,
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainer
-            ),
-            child: const SizedBox.expand(),
+          child: Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              if (_showVideo)
+                SizedBox.expand(
+                  child: Video(
+                    controller: _videoController,
+                    controls: NoVideoControls,
+                    fill: Colors.transparent,
+                  ),
+                ),
+
+              SizedBox.expand(child: CustomPaint(
+                painter: _ReplayPainter(
+                  positions: widget.positionMap,
+                  idx: _currentTime * widget.sampleRate,
+                  frameSize: widget.frameSize,
+                  // Pass null if video is showing so we don't block it
+                  backgroundColor: _showVideo
+                      ? null
+                      : Theme.of(context).colorScheme.surfaceContainer,
+                ),
+                ),
+              ),
+              IconButton.filledTonal(
+                onPressed: () => setState(() {
+                  _showVideo = !_showVideo;
+                  if (_showVideo) _player.seek(Duration(milliseconds: (_currentTime * 1000).toInt()));
+                }),
+                icon: Icon(_showVideo ? Icons.video_camera_back : Icons.video_camera_back_outlined),
+              ),
+            ],
           ),
         ),
         Slider(
@@ -104,6 +140,7 @@ class _ReplayWidgetState extends State<ReplayWidget> with SingleTickerProviderSt
           max: widget.duration,
           onChanged: (v) => setState(() {
             _currentTime = v.toDouble();
+            if (_showVideo) _player.seek(Duration(milliseconds: (_currentTime * 1000).toInt()));
             if (_isPlaying) {
               _isPlaying = false;
               _ticker?.stop();
@@ -166,7 +203,7 @@ class _ReplayPainter extends CustomPainter {
 
       final textStyle = TextStyle(
         color: color,
-        fontSize: 20
+        fontSize: 20,
       );
       final textSpan = TextSpan(
         text: entry.key,

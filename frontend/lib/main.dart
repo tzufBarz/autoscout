@@ -6,8 +6,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:media_kit/media_kit.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -71,7 +74,7 @@ class _UploadPageState extends State<UploadPage> {
 
       final jobId = response.data['job_id'];
       if (jobId != null && mounted) {
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => JobPage(jobId: jobId)));
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => JobPage(jobId: jobId, videoPath: pickedFile!.path!)));
       }
     } on DioException catch (e) {
       if (mounted) {
@@ -139,7 +142,8 @@ class _UploadPageState extends State<UploadPage> {
 
 class JobPage extends StatefulWidget {
   final String jobId;
-  const JobPage({super.key, required this.jobId});
+  final String videoPath;
+  const JobPage({super.key, required this.jobId, required this.videoPath});
 
   @override
   State<StatefulWidget> createState() => _JobPageState();
@@ -244,7 +248,7 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ],
-            ) : _status == 'done' ? ReplayWidget.fromResults(_results) : Text(_status),
+            ) : _status == 'done' ? ReplayWidget.fromResults(_results, videoPath: widget.videoPath) : Text(_status),
           ),
         ),
       ),
