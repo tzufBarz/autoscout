@@ -264,7 +264,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
             results = model.track(
                 source=frame,
                 persist=True,
-                tracker=os.path.join(BASE_DIR, "frc_botsort.yaml"),
+                tracker=os.path.join(BASE_DIR, "frc_bytetrack.yaml"),
                 verbose=False,
                 conf=0.1
             )
