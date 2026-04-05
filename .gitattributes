@@ -1,0 +1,6 @@
+frontend/ios/** linguist-vendored
+frontend/android/** linguist-vendored
+frontend/windows/** linguist-vendored
+frontend/macos/** linguist-vendored
+frontend/linux/** linguist-vendored
+frontend/web/** linguist-vendored
