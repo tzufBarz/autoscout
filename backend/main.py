@@ -13,6 +13,7 @@ import Levenshtein
 from tqdm import tqdm
 from scipy.ndimage import gaussian_filter1d
 from collections import defaultdict
+from itertools import combinations
 
 
 # Constants
@@ -179,6 +180,18 @@ def update(track: int, teams: list[str], alliance: int, digits: str, timestamp: 
     # <</voting_system>>
 
 
+def segments_intersect(a, b, c, d):
+    ab = b - a
+    ac = c - a
+    ad = d - a
+    cd = d - c
+    ca = a - c
+    cb = b - c
+
+    return (np.cross(ab, ac) * np.cross(ab, ad) < 0 and
+            np.cross(cd, ca) * np.cross(cd, cb) < 0)
+
+
 def smooth_and_interpolate(positions: list, total_duration_ms: float, target_hz: float = 50, sigma=5):
     """
     Average duplicate detections, interpolate in gaps and smooth with a gaussian filter.
@@ -294,6 +307,27 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
                     team_tracks[i] = 0
                     if track in track_teams:
                         track_teams[track].append((timestamp, -1))
+
+            confirmed = [
+                (tid, np.array(track_positions[tid][-1][1:]), np.array(track_positions[tid][-2][1:]))
+                for tid in (int(t) for t in team_tracks if t != 0)
+                if len(track_positions.get(tid, [])) >= 2
+                and track_teams[tid][-1][0] < timestamp
+            ]
+
+            unconfirmed_this_frame = set()
+
+            for (tid1, curr1, prev1), (tid2, curr2, prev2) in combinations(confirmed, 2):
+                if segments_intersect(prev1, curr1, prev2, curr2):
+                    for tid in (tid1, tid2):
+                        print(f"{teams[np.argmax(team_tracks == tid1)]} and {teams[np.argmax(team_tracks == tid2)]} intersected!")
+                        if tid in unconfirmed_this_frame:
+                            continue
+                        if tid in track_teams:
+                            track_teams[tid].append((timestamp, -1))
+                        track_votes[tid] = np.zeros(6)
+                        team_tracks[team_tracks == tid] = 0
+                        unconfirmed_this_frame.add(tid)
 
             crops = []
             crop_tracks = []
