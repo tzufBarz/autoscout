@@ -23,7 +23,9 @@ DIGIT_WEIGHT = 1 - ALLIANCE_WEIGHT
 ALPHA = 0.3
 BETA = 1 - ALPHA
 
-TEAM_THRESH = 0.75
+TEAM_RAW_THRESH = 0.75
+
+MARGIN_SCALE = 0.5
 
 ALLIANCE_MASK = (np.arange(6) // 3)
 
@@ -152,7 +154,7 @@ def digit_scores(digits: str, teams: list[str]) -> np.ndarray:
     return scores
 
 
-def update(track: int, teams: list[str], alliance: int, digits: str, timestamp: float, track_votes: dict, track_teams: dict[int, list[tuple[float, int]]], team_tracks: np.ndarray) -> None:
+def update(track: int, teams: list[str], alliance: int, digits: str, timestamp: float, track_votes: dict, track_teams: dict[int, list[tuple[float, int]]], team_tracks: np.ndarray, lost_ids: set, pair_difficulties: np.ndarray) -> None:
     """
     Update an unrecognized track's votes and match to a team when possible.
     Args:
@@ -160,10 +162,12 @@ def update(track: int, teams: list[str], alliance: int, digits: str, timestamp: 
         teams: The numbers of the 6 teams in this match, blue alliance followed by red alliance.
         alliance: The robot's detected alliance color.
         digits: The robot's detected bumper digits.
-        frame_idx: The current timestamp.
+        timestamp: The current timestamp.
         track_votes: A state dictionary, accumulating votes to every possible team in a numpy array for each track ID.
         track_teams: A state dictionary, containing each track's history of chosen team indices.
         team_tracks: A state numpy array, containing the current track ID of each team.
+        lost_ids: The set of track IDs currently considered "lost" by ByteTrack.
+        pair_difficulties: The matrix containing normalized Levenshtein similarity between any two team numbers.
     """
     # <<voting_system>>
     if track not in track_teams or not track_teams[track]:
@@ -173,8 +177,19 @@ def update(track: int, teams: list[str], alliance: int, digits: str, timestamp: 
     if track not in track_votes:
         track_votes[track] = np.zeros(6)
     track_votes[track] = ALPHA * track_votes[track] + BETA * votes
-    match = np.argmax(track_votes[track] * (team_tracks == 0))
-    if track_votes[track][match] >= TEAM_THRESH:
+    candidate_mask = (team_tracks == 0) | np.array([t in lost_ids for t in team_tracks])
+    scores = track_votes[track] * candidate_mask
+    match = int(np.argmax(scores))
+    second_mask = candidate_mask.copy()
+    second_mask[match] = False
+    second = int(np.argmax(scores * second_mask)) if second_mask.any() else -1
+
+    margin_thresh = dynamic_margin(match, second, pair_difficulties) if second != -1 else 0.0
+
+    if scores[match] >= TEAM_RAW_THRESH and scores[match] - scores[second] >= margin_thresh:
+        old_track = team_tracks[match]
+        if old_track != 0:
+            track_teams[old_track].append((timestamp, -1))
         track_teams[track][-1] = (track_teams[track][-1][0], int(match))
         team_tracks[match] = track
     # <</voting_system>>
@@ -190,6 +205,27 @@ def segments_intersect(a, b, c, d):
 
     return (np.cross(ab, ac) * np.cross(ab, ad) < 0 and
             np.cross(cd, ca) * np.cross(cd, cb) < 0)
+
+
+def compute_pair_difficulties(teams: list[str]) -> np.ndarray:
+    """
+    Returns a 6x6 matrix where entry [i,j] is the normalized Levenshtein
+    similarity between teams[i] and teams[j] (1 = identical, 0 = completely different).
+    """
+    n = len(teams)
+    diff = np.zeros((n, n))
+    for i, j in combinations(range(n), 2):
+        dist = Levenshtein.distance(teams[i], teams[j])
+        max_len = max(len(teams[i]), len(teams[j]))
+        similarity = 1 - dist / max_len  # high = hard to distinguish
+        diff[i, j] = diff[j, i] = similarity
+    return diff
+
+
+def dynamic_margin(winner_idx: int, second_idx: int,
+                   pair_difficulties: np.ndarray) -> float:
+    difficulty = pair_difficulties[winner_idx, second_idx]
+    return MARGIN_SCALE * DIGIT_WEIGHT * (1 - difficulty)
 
 
 def smooth_and_interpolate(positions: list, total_duration_ms: float, target_hz: float = 50, sigma=5):
@@ -252,6 +288,8 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     teams = schedule[match_number]
+
+    pair_difficulties = compute_pair_difficulties(teams)
 
     track_votes = {}
     track_teams: dict[int, list[tuple[float, int]]] = {}
@@ -352,7 +390,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
             for track, digits in zip(crop_tracks, numbers):
                 if digits:
                     tid, alliance = track
-                    update(tid, teams, alliance, digits, timestamp, track_votes, track_teams, team_tracks)
+                    update(tid, teams, alliance, digits, timestamp, track_votes, track_teams, team_tracks, lost_ids, pair_difficulties)
 
             pbar.update()
             if progress_callback:
