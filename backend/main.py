@@ -237,10 +237,6 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count - 1)
-    cap.grab()
-    duration = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
-    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
     teams = schedule[match_number]
 
@@ -250,7 +246,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
 
     track_positions: dict[int, list[tuple[float, int, int]]] = {}
 
-
+    timestamp = 0.0
     tracker = None
 
     with tqdm(total=frame_count) as pbar:
@@ -338,8 +334,6 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
 
     cap.release()
 
-    total_ms = duration * 1000
-
     all_positions = [[] for _ in range(6)]
     for tid, indices in track_teams.items():
         for i in range(len(indices)):
@@ -353,12 +347,12 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
 
     return {
         "teams": teams,
-        "duration": duration,
+        "duration": timestamp / 1000.0,
         "sample_rate": SAMPLE_RATE,
         "frame_width": frame_width,
         "frame_height": frame_height,
         "trajectories": {
-            teams[i]: [[float(x), float(y)] for x, y in smooth_and_interpolate(positions, total_ms)]
+            teams[i]: [[float(x), float(y)] for x, y in smooth_and_interpolate(positions, timestamp)]
             for i, positions in enumerate(all_positions)
         }
     }
