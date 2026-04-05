@@ -9,7 +9,13 @@
 
 AutoScout is a computer vision pipeline for automatically tracking and identifying all six robots in FRC match footage. It combines YOLO-based robot detection with ByteTrack multi-object tracking and bumper number recognition to assign each robot to its team throughout a match, outputting smoothed trajectories for post-match analysis.
 
+![demo](docs/demo.gif)
+*Original footage by [FIRST Israel](https://www.youtube.com/watch?v=PGvsHXN1ywo)*
+
 ## Credits
 ### Datasets
 
-**Robot Detection**: [Robot Detection](https://universe.roboflow.com/main-wcgiu/robot-detection-xru6m) by Roboflow user `main-wcgiu`, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **Robot Detection**: [Robot Detection](https://universe.roboflow.com/main-wcgiu/robot-detection-xru6m) by Roboflow user `main-wcgiu`, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+### Media
+- **Demo**: Original footage by [FIRST Israel](https://www.youtube.com/watch?v=PGvsHXN1ywo)
