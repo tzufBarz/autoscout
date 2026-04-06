@@ -44,7 +44,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Load models
 model = YOLO(os.path.join(BASE_DIR, "models/robots.pt"))
-digit_model = YOLO(os.path.join(BASE_DIR, "models/digits.pt"))
+digit_model = YOLO(os.path.join(BASE_DIR, "models/digits_26_04_06.pt"))
 
 # FastAPI setup
 app = FastAPI()
@@ -99,7 +99,7 @@ async def process(job_id: UUID, path: str, match: int):
         jobs[job_id] = {"status": "error", "result": str(e)}
 
 
-def detect_digits(crops: list, digit_model: YOLO, conf_thresh=0.4) -> list[str | None]:
+def detect_digits(crops: list, digit_model: YOLO, conf_thresh=0.2) -> list[str | None]:
     """
     Use batched inference to detect digits on cropped robot images.
     Args:
