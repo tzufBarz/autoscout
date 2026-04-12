@@ -1,1 +1,2 @@
-build
+/build/
+/report/.dir-locals.el
