@@ -1,0 +1,93 @@
+בפרק זה יפורטו כלי התוכנה, הספריות ותשתיות הפיתוח ששימשו לבניית
+המערכת. הבחירה בכלים אלו נעשתה מתוך שיקולים הנדסיים של ביצועים בזמן
+אמת, קלות תחזוקה ויכולת פריסה כשרת מרכזי.
+
+\subsection{סביבות עבודה ותשתית חומרה}
+
+בשל הבדלי המשאבים הנדרשים בין
+שלב האימון לשלב ההרצה, נעשה שימוש בשתי סביבות נפרדות:
+\begin{itemize}
+\item \textbf{סביבת אימון (\textenglish{Cloud GPU}):} אימון מודלי
+  ה־\textenglish{YOLO} בוצע על גבי פלטפורמת \textbf{\textenglish{Google
+      Colab}} תוך שימוש במעבד גרפי (\textenglish{GPU}) \textenglish{T4} של חברת
+  \textenglish{NVIDIA}. שימוש זה אפשר לקצר משמעותית את זמן האימון של
+  הרשתות העמוקות.
+\item \textbf{סביבת הרצה ובדיקה (\textenglish{Local CPU}):} בדיקת
+  המערכת והרצת השרת בוצעו על מחשב מקומי בעל מעבד \textenglish{Intel
+    i7-10700}. סביבה זו מדמה את תנאי העבודה האמיתיים בתחרות, בהם לא תמיד
+  קיימת גישה למשאבי ענן חזקים.
+\end{itemize}
+
+\subsection{ספריות ליבה ועיבוד נתונים (\textenglish{Backend})}
+
+המערכת
+מבוססת על שפת \textenglish{Python} ומשתמשת בספריות הבאות:
+\begin{itemize}
+\item \textbf{\textenglish{Ultralytics}}: המעטפת המרכזית להרצת
+  מודלי ה־\textenglish{YOLO} בפורמט \textenglish{PyTorch}.
+\item \textbf{\textenglish{Levenshtein}}: ספרייה לחישוב מהיר של
+  מרחק עריכה בין מחרוזות. היא משמשת כמרכיב קריטי בתיקון שגיאות זיהוי של
+  מספר הקבוצה על ידי השוואת הפלט למספרי הקבוצות המשתתפות במקצה.
+\item \textbf{\textenglish{OpenCV} ו־\textenglish{SciPy}}: לניהול
+  זרם הוידאו, גזירת תמונות (\textenglish{Crops}) והפעלת מסננים סטטיסטיים
+  להחלקת מסלולי הרובוטים.
+\item \textbf{\textenglish{NumPy}}: לניהול המטריצות של התמונות
+  וביצוע חישובים מספריים על מיקומי האובייקטים.
+\end{itemize}
+
+\subsection{תשתית השרת (\textenglish{Infrastucture})}
+
+כדי לאפשר עיבוד
+וידאו כבד בסביבת אינטרנט, נעשה שימוש בכלים המאפשרים מקביליות וביצועים
+גבוהים:
+\begin{itemize}
+\item \textbf{\textenglish{FastAPI} ו־\textenglish{Uvicorn}}: השרת
+  מבוסס על \textenglish{FastAPI} ורץ על גבי מנוע
+  \textenglish{Uvicorn}. בחירה זו מאפשרת טיפול מהיר בבקשות
+  \textenglish{HTTP} והעלאת קבצים בצורה יעילה.
+\item \textbf{\textenglish{asyncio}}: שימוש בתכנות אסינכרוני
+  (\textenglish{Asynchronous Programming}) המאפשר לשרת לנהל מספר פעולות
+  במקביל. תשתית זו קריטית כדי לאפשר למשתמשים לבדוק סטטוס עיבוד בזמן
+  שהמעבד עסוק בחישוב המודלים.
+\end{itemize}
+
+\subsection{ממשק המשתמש (\textenglish{Frontend})}
+
+האפליקציה פותחה
+ב־\textbf{\textenglish{Flutter}} (שפת \textenglish{Dart}) תוך שימוש
+בחבילות ייעודיות המבטיחות חוויית משתמש חלקה:
+\begin{itemize}
+\item \textbf{\textenglish{dio}}: לניהול בקשות
+  ה־\textenglish{HTTP} והעברת סרטוני הוידאו מול השרת.
+\item \textbf{\textenglish{media\_kit}}: חבילה מתקדמת להצגת וידאו
+  וניגון מדיה ביציבות גבוהה על גבי מכשירים שונים.
+\item \textbf{\textenglish{file\_picker}}: המאפשרת למשתמש לבחור את
+  סרטוני המקצים מתוך זכרון המכשיר בצורה נוחה.
+\end{itemize}
+
+\subsection{תיוג נתונים וניהול מודלים}
+
+לצורך יצירת מערך הנתונים, נעשה
+שימוש בפלטפורמת \textbf{\textenglish{Roboflow}}. הכלי שימש לתיוג ידני
+של הספרות, ביצוע העשרת נתונים (\textenglish{Augmentation}) וייצוא
+הנתונים בפורמטים המתאימים לאימון.
+
+\subsection{ריכוז הכלים וסביבות הפיתוח}
+
+\begin{center}
+\small
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{כלי / ספרייה} & \textbf{שימוש בפרויקט} & \textbf{סביבה} \\ \hline
+\textenglish{Google Colab} & אימון המודלים על \textenglish{GPU} & \textenglish{Training} \\ \hline
+\textenglish{Roboflow} & תיוג נתונים וניהול ה־\textenglish{Dataset} & \textenglish{Training} \\ \hline
+\textenglish{FastAPI} & תשתית השרת וניהול המשימות & \textenglish{Infrastructure} \\ \hline
+\textenglish{Uvicorn} & מנוע הרצת השרת (\textenglish{ASGI}) & \textenglish{Infrastructure} \\ \hline
+\textenglish{asyncio} & ניהול מקביליות ופעולות אסינכרוניות & \textenglish{Infrastructure} \\ \hline
+\textenglish{Ultralytics} & מודלי זיהוי אובייקטים וספרות & \textenglish{Backend} \\ \hline
+\textenglish{Levenshtein} & אלגוריתם לתיקון שגיאות זיהוי & \textenglish{Backend} \\ \hline
+\textenglish{OpenCV} & עיבוד תמונה וניהול זרם וידאו & \textenglish{Backend} \\ \hline
+\textenglish{Flutter} & פיתוח ממשק המשתמש הוויזואלי & \textenglish{Frontend} \\ \hline
+\textenglish{media\_kit} & ניגון והצגת תוצאות הוידאו & \textenglish{Frontend} \\ \hline
+\end{tabular}
+\end{center}
