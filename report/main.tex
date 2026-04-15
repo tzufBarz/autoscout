@@ -7,6 +7,7 @@
 \usepackage{framed}
 \usepackage{lineno}
 \usepackage{fancyvrb}
+\usepackage{siunitx}
 
 \usepackage[outputdir=build, cachedir=.minted]{minted}
 \setminted{
@@ -18,6 +19,7 @@
 }
 
 \usepackage{fontspec}
+\usepackage{enumitem}
 \usepackage{polyglossia}
 
 \usepackage{graphicx}
@@ -32,6 +34,9 @@
 
 \newfontfamily\hebrewfonttt[Script=Hebrew]{David CLM}
 \setmainfont{David CLM}
+
+\setlist[itemize,1]{label={\fontspec{CMU Serif}\textbullet}}
+\setlist[itemize,2]{label={\fontspec{CMU Serif}--}}
 
 \definecolor{codebg}{RGB}{245, 245, 245}
 
@@ -64,6 +69,7 @@
 
 \tableofcontents
 \newpage
+
 
 \section{מבוא ותקציר}
 \input{sections/introduction}

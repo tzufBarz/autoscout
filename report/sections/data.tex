@@ -1,0 +1,42 @@
+\subsection{מודל זיהוי הרובוטים}
+
+השתמשתי
+ב\href{https://universe.roboflow.com/main-wcgiu/robot-detection-xru6m/16}{מערך
+  נתונים} קיים מ-Roboflow, עם מעל 1000 תמונות משידורים רשמיים של
+\textenglish{FIRST}. כל רובוט מסומן ב-\textenglish{Bounding Box} שלו
+ומסווג לפי הברית שלו: כחול או אדום.
+
+על הנתונים יש \textenglish{Augmentation} שמכפיל את מספר תמונות האימון
+פי 3 כדי להגדיל את כמות הנתונים ולהוסיף גיוון כהכנה לתנאי צילום שונים:
+
+\begin{english}
+\begin{itemize}
+  \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal, \qty{+-10}{\degree} Vertical
+  \item \textbf{Brightness:} \qty{+-20}{\percent}
+  \item \textbf{Noise:} $\leq$ \qty{0.1}{\percent}
+\end{itemize}
+\end{english}
+
+\subsection{מודל זיהוי הספרות}
+
+השתמשתי
+ב\href{https://app.roboflow.com/new-workspace-pyain/nums-llmwb/13}{מערך
+  נתונים} עם כ-500 תמונות של רובוטים שתייגתי בעזרת
+\textenglish{Roboflow}. כל ספרה מסומנת ב-\textenglish{Bounding Box}
+שלה ומסווגת. התמונות המוקדמות יותר נאספו ונחתכו ידנית ממקורות שונים
+כולל סרטונים באיכות גבוהה יותר, בעוד שהמאוחרות יותר נחתכו אוטומטית על
+ידי מודל זיהוי הרובוטים מסרטונים רשמיים.
+
+על הנתונים יש \textenglish{Augmentation} שמכפיל את מספר תמונות האימון
+פי 3, כדי להגדיל את כמות הנתונים ולהוסיף גיוון כהכנה לתנאי צילום
+שונים, לרובוטים שמופיעים בזוויות שונות ולחיתוכים לא מדויקים של הרובוט:
+
+\begin{english}
+\begin{itemize}
+  \item \textbf{Crop:} $\leq$ \qty{10}{\percent}
+  \item \textbf{Rotation:} \qty{+-5}{\degree}
+  \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal, \qty{+-5}{\degree} Vertical
+  \item \textbf{Brightness:} \qty{+-15}{\percent}
+  \item \textbf{Exposure:} \qty{+-10}{\percent}
+\end{itemize}
+\end{english}
