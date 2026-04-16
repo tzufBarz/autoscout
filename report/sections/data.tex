@@ -10,11 +10,11 @@
 פי 3 כדי להגדיל את כמות הנתונים ולהוסיף גיוון כהכנה לתנאי צילום שונים:
 
 \begin{english}
-\begin{itemize}
+  \begin{itemize}
   \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal, \qty{+-10}{\degree} Vertical
   \item \textbf{Brightness:} \qty{+-20}{\percent}
   \item \textbf{Noise:} $\leq$ \qty{0.1}{\percent}
-\end{itemize}
+  \end{itemize}
 \end{english}
 
 \subsection{מודל זיהוי הספרות}
@@ -32,11 +32,24 @@
 שונים, לרובוטים שמופיעים בזוויות שונות ולחיתוכים לא מדויקים של הרובוט:
 
 \begin{english}
-\begin{itemize}
+  \begin{itemize}
   \item \textbf{Crop:} $\leq$ \qty{10}{\percent}
   \item \textbf{Rotation:} \qty{+-5}{\degree}
-  \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal, \qty{+-5}{\degree} Vertical
+  \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal,
+    \qty{+-5}{\degree} Vertical
   \item \textbf{Brightness:} \qty{+-15}{\percent}
   \item \textbf{Exposure:} \qty{+-10}{\percent}
-\end{itemize}
+  \end{itemize}
 \end{english}
+
+\subsection{דוגמאות מתוך מערך הנתונים}
+
+כדי להמחיש את איכות התיוג ואת השונות בנתונים, צורפו דוגמאות ויזואליות
+למערכי הנתונים (איורים \ref{fig:robots_sample} ו־\ref{fig:digits_sample}) בנספח
+\ref{app:data_samples}.
+
+\subsection{התפלגות מחלקות}
+
+מערך הנתונים כולל איזון בין רובוטים מהברית הכחולה לאדומה, ודגימות של
+כל הספרות (0-9) במגוון זוויות צילום ותנאי תאורה, כדי להבטיח הכללה
+(\textenglish{Generalization}) טובה של המודל.

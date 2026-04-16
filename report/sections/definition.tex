@@ -1,14 +1,21 @@
-המערכת השלמה צריכה לקבל סרטון ממקצה ולהחזיר מסלול חלק של כל רובוט
-לאורך המקצה --- המיקום שלו בכל נקודת זמן במרווחים קבועים. בשביל לעשות
-את זה, חילקתי את המערכת לשני מודלים:
+כדי לפתור את בעיית הסקאוטינג האוטומטי, נגדיר אותה כבעיית למידה בפיקוח (\textenglish{Supervised Learning}):
 
-\subsection{מודל זיהוי הרובוטים}
-
-המודל הזה מקבל פריים מהסרטון, ומחזיר את זיהויי הרובוטים: עבור כל
-רובוט, \textenglish{Bounding Box} וסיווג של ברית הרובוט לפי הצבע שלו
---- כחול או אדום.
-
-\subsection{מודל זיהוי הספרות}
-
-המודל הזה מקבל תמונה שחתוכה ל־\textenglish{Bounding Box} של רובוט,
-ומזהה את הספרות על הבאמפר לפי הסדר שבו הן מופיעות משמאל לימין.
+\begin{itemize}
+    \item \textbf{מרחב הקלט ($X$):} רצף של פריימים מתוך וידאו, כאשר כל פריים $f \in \mathbb{R}^{H \times W \times 3}$ (גובה $H$, רוחב $W$ ו-3 ערוצי צבע).
+    \item \textbf{מרחב הפלט ($Y$):} עבור כל פריים, המערכת מחזירה קבוצת זיהויים $y = \{B, C, ID\}$ לכל רובוט:
+    \begin{itemize}
+        \item $B$: קואורדינטות תיחום (\textenglish{Bounding Box}) בפורמט $[x, y, w, h]$.
+        \item $C$: סיווג ברית (\textenglish{Alliance}) - אדום או כחול.
+        \item $ID$: זיהוי ייחודי של הקבוצה (למשל 1577) מתוך רשימת המשתתפים במקצה.
+    \end{itemize}
+    \item \textbf{פונקציית ההפסד (\textenglish{Loss Function}):} המודל עושה שימוש בשילוב של פונקציות הפסד:
+    \begin{itemize}
+        \item \textenglish{CIoU Loss} עבור דיוק המיקום והגודל של התיחום.
+        \item \textenglish{Binary Cross Entropy (BCE)} עבור סיווג המחלקות (ספרות ובריתות).
+    \end{itemize}
+    \item \textbf{מדדי הצלחה (\textenglish{Metrics}):}
+    \begin{itemize}
+        \item \textenglish{mAP@50}: מדד הדיוק הממוצע לזיהוי אובייקטים.
+        \item \textenglish{Accuracy}: אחוז זיהוי הקבוצות הנכון בסוף התהליך (לאחר שקלול ה־\textenglish{Levenshtein}).
+    \end{itemize}
+\end{itemize}

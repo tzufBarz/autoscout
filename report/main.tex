@@ -8,6 +8,7 @@
 \usepackage{lineno}
 \usepackage{fancyvrb}
 \usepackage{siunitx}
+\usepackage{amssymb}
 
 \usepackage[outputdir=build, cachedir=.minted]{minted}
 \setminted{
@@ -93,5 +94,15 @@
 \input{sections/conclusions}
 \section{רפלקציה אישית}
 \input{sections/reflection}
+
+\newpage
+\appendix
+
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+\section{נספחים}
+\input{sections/appendices}
+\section{ביבליוגרפיה}
+\input{sections/bibliography}
 
 \end{document}

@@ -1,0 +1,42 @@
+\subsection{ריכוז כלים וטכנולוגיות} \label{app:tools}
+
+להלן פירוט מלא של הספריות והכלים ששימשו בפיתוח המערכת:
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{כלי / ספרייה} & \textbf{שימוש בפרויקט} & \textbf{סביבה} \\ \hline
+    \textenglish{Google Colab} & אימון המודלים על \textenglish{GPU} & \textenglish{Training} \\ \hline
+    \textenglish{Roboflow} & תיוג נתונים וניהול ה־\textenglish{Dataset} & \textenglish{Training} \\ \hline
+    \textenglish{FastAPI} & תשתית השרת וניהול המשימות & \textenglish{Infrastructure} \\ \hline
+    \textenglish{Uvicorn} & מנוע הרצת השרת (\textenglish{ASGI}) & \textenglish{Infrastructure} \\ \hline
+    \textenglish{asyncio} & ניהול מקביליות ופעולות אסינכרוניות & \textenglish{Infrastructure} \\ \hline
+    \textenglish{Ultralytics} & מודלי זיהוי אובייקטים וספרות & \textenglish{Backend} \\ \hline
+    \textenglish{Levenshtein} & אלגוריתם לתיקון שגיאות זיהוי & \textenglish{Backend} \\ \hline
+    \textenglish{OpenCV} & עיבוד תמונה וניהול זרם וידאו & \textenglish{Backend} \\ \hline
+    \textenglish{Flutter} & פיתוח ממשק המשתמש הוויזואלי & \textenglish{Frontend} \\ \hline
+    \textenglish{media\_kit} & ניגון והצגת תוצאות הוידאו & \textenglish{Frontend} \\ \hline
+  \end{tabular}
+  \caption{פירוט טכנולוגי מלא של רכיבי המערכת.}
+  \label{tab:tools_full}
+\end{table}
+
+\newpage
+
+\subsection{דוגמאות מתויגות ממערך הנתונים} \label{app:data_samples}
+
+באיורים להלן מוצגות דוגמאות לתיוג המקורי בתוך פלטפורמת
+\textenglish{Roboflow}.
+
+\begin{figure}[H] \centering
+  \includegraphics[width=0.7\textwidth]{robots-sample}
+  \caption{דוגמה לתיוג רובוטים ובריתות במגרש (מודל זיהוי הרובוטים).}
+  \label{fig:robots_sample}
+\end{figure}
+
+\begin{figure}[H] \centering
+  \includegraphics[width=0.5\textwidth]{digits-sample}
+  \caption{דוגמה לתיוג ספרות בודדות על באמפר (מודל זיהוי הס).}
+  \label{fig:digits_sample}
+\end{figure}
