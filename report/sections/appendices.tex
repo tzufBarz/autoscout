@@ -4,19 +4,25 @@
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|l|l|l|}
+  \begin{tabular}{|p{0.19\textwidth}|p{0.12\textwidth}|p{0.31\textwidth}|p{0.16\textwidth}|}
     \hline
-    \textbf{כלי / ספרייה} & \textbf{שימוש בפרויקט} & \textbf{סביבה} \\ \hline
-    \textenglish{Google Colab} & אימון המודלים על \textenglish{GPU} & \textenglish{Training} \\ \hline
-    \textenglish{Roboflow} & תיוג נתונים וניהול ה־\textenglish{Dataset} & \textenglish{Training} \\ \hline
-    \textenglish{FastAPI} & תשתית השרת וניהול המשימות & \textenglish{Infrastructure} \\ \hline
-    \textenglish{Uvicorn} & מנוע הרצת השרת (\textenglish{ASGI}) & \textenglish{Infrastructure} \\ \hline
-    \textenglish{asyncio} & ניהול מקביליות ופעולות אסינכרוניות & \textenglish{Infrastructure} \\ \hline
-    \textenglish{Ultralytics} & מודלי זיהוי אובייקטים וספרות & \textenglish{Backend} \\ \hline
-    \textenglish{Levenshtein} & אלגוריתם לתיקון שגיאות זיהוי & \textenglish{Backend} \\ \hline
-    \textenglish{OpenCV} & עיבוד תמונה וניהול זרם וידאו & \textenglish{Backend} \\ \hline
-    \textenglish{Flutter} & פיתוח ממשק המשתמש הוויזואלי & \textenglish{Frontend} \\ \hline
-    \textenglish{media\_kit} & ניגון והצגת תוצאות הוידאו & \textenglish{Frontend} \\ \hline
+    \textbf{כלי / ספרייה} & \textbf{גרסה} & \textbf{שימוש בפרויקט} & \textbf{סביבה} \\ \hline
+    \textenglish{Python} & [להשלים] & שפת הפיתוח המרכזית של צד השרת והמודלים & \textenglish{Backend} \\ \hline
+    \textenglish{Git} & [להשלים] & ניהול גרסאות הקוד במהלך הפיתוח & \textenglish{Development} \\ \hline
+    \textenglish{Google Colab} & --- & אימון המודלים על \textenglish{GPU} & \textenglish{Training} \\ \hline
+    \textenglish{Roboflow} & --- & תיוג נתונים וניהול ה־\textenglish{Dataset} & \textenglish{Training} \\ \hline
+    \textenglish{FastAPI} & [להשלים] & תשתית השרת וניהול המשימות & \textenglish{Infrastructure} \\ \hline
+    \textenglish{Uvicorn} & [להשלים] & מנוע הרצת השרת (\textenglish{ASGI}) & \textenglish{Infrastructure} \\ \hline
+    \textenglish{asyncio} & --- & ניהול מקביליות ופעולות אסינכרוניות & \textenglish{Infrastructure} \\ \hline
+    \textenglish{Ultralytics} & [להשלים] & מודלי זיהוי אובייקטים וספרות & \textenglish{Backend} \\ \hline
+    \textenglish{Levenshtein} & [להשלים] & אלגוריתם לתיקון שגיאות זיהוי & \textenglish{Backend} \\ \hline
+    \textenglish{OpenCV} & [להשלים] & עיבוד תמונה וניהול זרם וידאו & \textenglish{Backend} \\ \hline
+    \textenglish{NumPy} & [להשלים] & חישובים מספריים ומבני נתונים למטריצות & \textenglish{Backend} \\ \hline
+    \textenglish{SciPy} & [להשלים] & החלקה ואינטרפולציה של מסלולים & \textenglish{Backend} \\ \hline
+    \textenglish{Flutter} & [להשלים] & פיתוח ממשק המשתמש הוויזואלי & \textenglish{Frontend} \\ \hline
+    \textenglish{dio} & [להשלים] & שליחת בקשות \textenglish{HTTP} והעלאת קבצים & \textenglish{Frontend} \\ \hline
+    \textenglish{media\_kit} & [להשלים] & ניגון והצגת תוצאות הוידאו & \textenglish{Frontend} \\ \hline
+    \textenglish{file\_picker} & [להשלים] & בחירת סרטוני מקצים ממכשיר המשתמש & \textenglish{Frontend} \\ \hline
   \end{tabular}
   \caption{פירוט טכנולוגי מלא של רכיבי המערכת.}
   \label{tab:tools_full}
@@ -31,12 +37,23 @@
 
 \begin{figure}[H] \centering
   \includegraphics[width=0.7\textwidth]{robots-sample}
-  \caption{דוגמה לתיוג רובוטים ובריתות במגרש (מודל זיהוי הרובוטים).}
+  \caption{דוגמה לתיוג רובוטים ובריתות במגרש.}
   \label{fig:robots_sample}
 \end{figure}
 
 \begin{figure}[H] \centering
   \includegraphics[width=0.5\textwidth]{digits-sample}
-  \caption{דוגמה לתיוג ספרות בודדות על באמפר (מודל זיהוי הס).}
+  \caption{דוגמה לתיוג ספרות בודדות על באמפר.}
   \label{fig:digits_sample}
 \end{figure}
+
+\subsection{קטעי קוד} \label{app:listings}
+
+\begin{listing}[H]
+  \caption{שלב ההצבעה המצטברת והתאמת עקבה לקבוצה, שנקראת עבור כל עקבה
+    שאינה מזוהה בכל פריים.}
+  \label{lst:voting_system}
+  \begin{english}
+    \inputminted{python}{build/snippets/voting_system.py}
+  \end{english}
+\end{listing}

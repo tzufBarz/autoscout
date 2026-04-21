@@ -9,6 +9,10 @@
 \usepackage{fancyvrb}
 \usepackage{siunitx}
 \usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{microtype}
+
+\setlength{\emergencystretch}{1em}
 
 \usepackage[outputdir=build, cachedir=.minted]{minted}
 \setminted{
@@ -41,6 +45,9 @@
 
 \definecolor{codebg}{RGB}{245, 245, 245}
 
+
+\renewcommand{\listingscaption}{קטע קוד}
+\renewcommand{\listoflistingscaption}{רשימת קטעי קוד}
 
 \parskip=0.5em
 \linespread{1.15}
@@ -82,7 +89,7 @@
 \input{sections/tools}
 \section{מערך הנתונים}
 \input{sections/data}
-\section{ארכיטקטורת המודל}
+\section{ארכיטקטורת המערכת}
 \input{sections/architecture}
 \section{תהליך האימון}
 \input{sections/training}
@@ -98,8 +105,6 @@
 \newpage
 \appendix
 
-\counterwithin{figure}{section}
-\counterwithin{table}{section}
 \section{נספחים}
 \input{sections/appendices}
 \section{ביבליוגרפיה}
