@@ -27,11 +27,18 @@
 \usepackage{enumitem}
 \usepackage{polyglossia}
 
+\usepackage{subcaption}
 \usepackage{graphicx}
 \graphicspath{{img/}}
 \usepackage{fancyhdr}
 \usepackage{geometry}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\usepackage{tikz}
+\usetikzlibrary{calc,chains,positioning,shapes.geometric,arrows.meta}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 
 
 \setmainlanguage{hebrew}
@@ -44,7 +51,7 @@
 \setlist[itemize,2]{label={\fontspec{CMU Serif}--}}
 
 \definecolor{codebg}{RGB}{245, 245, 245}
-
+\definecolor{schoolgreen}{RGB}{47, 79, 79}
 
 \renewcommand{\listingscaption}{קטע קוד}
 \renewcommand{\listoflistingscaption}{רשימת קטעי קוד}
@@ -67,17 +74,53 @@
 
 \begin{document}
 
-\title{
-    \includegraphics[width=0.4\textwidth]{school-logo} \\ [1cm]
-    \textenglish{AutoScout}: סקאוטינג אוטומטי ל־\textenglish{FRC}
+\IfFileExists{secrets.tex}{\input{secrets}}{\newcommand{\id}{XXXXXXXXX}}
+
+\begin{titlepage}
+\begin{center}
+
+% לוגו בית הספר
+\includegraphics[width=0.4\textwidth]{school-logo}
+
+\vspace{2cm}
+
+{\Huge\textbf{פרויקט גמר}}
+
+\vspace{1cm}
+
+{\LARGE\textbf{בנושא:}}
+
+\vspace{0.5cm}
+
+{\LARGE\textbf{\textcolor{schoolgreen}{\textenglish{AutoScout}: מערכת מעקב אוטומטית לרובוטי \textenglish{FRC}}}}
+
+\vspace{2cm}
+
+{\Large
+מוגש במסגרת לימודי הנדסת תוכנה\\
+התמחות למידת מכונה ולמידה עמוקה\\
+\LR{5} יחידות לימוד
 }
-\author{צוף ברזילי}
-\date{}
-\maketitle
+
+\vspace{2cm}
+
+\begin{Large}
+\begin{tabular}{r@{}l}
+\textbf{מגיש/ה:} & \hspace{2cm} צוף ברזילי\\[0.3cm]
+\textbf{ת"ז:} & \hspace{2cm} \id\\[0.3cm]
+\textbf{מנחה:} & \hspace{2cm} ד״ר שי פרח
+\end{tabular}
+\end{Large}
+
+\vfill
+
+{\Large \textbf{יוני \LR{2026}}}
+
+\end{center}
+\end{titlepage}
 
 \tableofcontents
 \newpage
-
 
 \section{מבוא ותקציר}
 \input{sections/introduction}

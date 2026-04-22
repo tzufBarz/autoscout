@@ -9,9 +9,9 @@
     \hline
     \textbf{רכיב} & \textbf{מדד} & \textbf{תוצאה} \\ \hline
     מודל זיהוי הרובוטים & \textenglish{mAP@50} & \textbf{0.95} \\ \hline
-    מודל זיהוי הספרות & דיוק ברמת הספרה & \textbf{0.70} \\ \hline
-    שיוך סופי של עקבה לקבוצה & דיוק שיוך & \textbf{[להשלים]} \\ \hline
-    ביצועי הרצה & \textenglish{FPS} & \textbf{[להשלים]} \\ \hline
+    מודל זיהוי הספרות & דיוק ברמת הספרה & \textbf{0.72} \\ \hline
+    שיוך סופי של עקבה לקבוצה & דיוק זיהוי ושיוך מתוך סרטון & \textbf{0.75} \\ \hline
+    ביצועי הרצה & \textenglish{FPS} & \textbf{30--60} \\ \hline
   \end{tabular}
   \caption{סיכום התוצאות הכמותיות של המערכת.}
   \label{tab:results_summary}
@@ -44,8 +44,10 @@
 
 \item \textbf{הפקת מסלולים שימושיים לניתוח:} גם במקרים שבהם היו חסרים
   פריימים בודדים או זיהויים לא מושלמים, האינטרפולציה וההחלקה הצליחו
-  להפיק מסלול תנועה סביר, קריא ורציף לשימוש בתצוגת הרפליי.
+  להפיק מסלול תנועה סביר, קריא ורציף לשימוש בתצוגת ה־\textenglish{Replay}.
 \end{itemize}
+
+דוגמאות וויזואליות להצלחות של המודלים מצורפות בנספח \ref{app:success_failure} באיור \ref{fig:success}.
 
 \subsection{דוגמאות כישלון וניתוח טעויות}
 
@@ -80,30 +82,9 @@
 העיבוד, ומסך \textenglish{Replay} המציג את המסלולים המחושבים, עם אפשרות
 להציג אותם גם מעל הסרטון המקורי.
 
-\begin{figure}[H]
-  \centering
-  \fbox{%
-    \parbox{0.82\textwidth}{%
-      \centering
-      [להוסיף כאן צילום מסך של מסך העלאת הסרטון או מסך ההתקדמות
-      באפליקציית \textenglish{Flutter}.]}}
-  \caption{צילום מסך של תהליך העלאת הסרטון והרצת הניתוח.}
-  \label{fig:app_upload}
-\end{figure}
+צילומי מסך של תצוגת העיבוד והתוצאות באפליקצייה מצורפים בנספח \ref{app:application}
 
-\begin{figure}[H]
-  \centering
-  \fbox{%
-    \parbox{0.82\textwidth}{%
-      \centering
-      [להוסיף כאן צילום מסך של מסך ה־\textenglish{Replay}, עם הצגת
-      המסלולים המחושבים לבד או מעל הווידאו המקורי.]}}
-  \caption{צילום מסך של תצוגת הרפליי והמסלולים שהמערכת מפיקה.}
-  \label{fig:app_replay}
-\end{figure}
-
-קישור לסרטון הדגמה קצר של המערכת בפעולה:
-\textbf{[להוסיף קישור לסרטון]}.
+\href{https://www.youtube.com/watch?v=x60OrcgcYnA}{AutoScout\texthebrew{: הדגמה}} --- קישור לסרטון הדגמה קצר של המערכת בפעולה.
 
 \subsection{סיכום פרק התוצאות}
 

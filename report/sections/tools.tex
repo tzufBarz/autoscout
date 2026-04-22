@@ -18,6 +18,22 @@
   קיימת גישה למשאבי ענן חזקים.
 \end{itemize}
 
+\subsection{שפות תכנות, \textenglish{Frameworks} וניהול גרסאות}
+
+כדי לעמוד בדרישות הפרויקט מבחינת ביצועים, ניידות ותחזוקה, נעשה שימוש
+בכמה שכבות פיתוח שונות:
+\begin{itemize}
+\item \textbf{שפות תכנות:} צד השרת, עיבוד הוידאו והרצת המודלים פותחו
+  ב־\textenglish{Python}, בעוד שממשק המשתמש פותח ב־\textenglish{Dart}
+  באמצעות \textenglish{Flutter}.
+\item \textbf{\textenglish{Frameworks}:} מודלי הזיהוי הורצו באמצעות
+  \textenglish{Ultralytics} על גבי \textenglish{PyTorch}, השרת מומש
+  באמצעות \textenglish{FastAPI} והאפליקציה נבנתה במסגרת
+  \textenglish{Flutter}.
+\item \textbf{ניהול גרסאות:} לאורך הפיתוח נעשה שימוש ב־\textenglish{Git}
+  לניהול הקוד, מעקב אחרי שינויים וחזרה לגרסאות קודמות במקרה הצורך.
+\end{itemize}
+
 \subsection{ספריות ליבה ועיבוד נתונים (\textenglish{Backend})}
 
 המערכת
@@ -35,7 +51,7 @@
   וביצוע חישובים מספריים על מיקומי האובייקטים.
 \end{itemize}
 
-\subsection{תשתית השרת (\textenglish{Infrastucture})}
+\subsection{תשתית השרת (\textenglish{Infrastructure})}
 
 כדי לאפשר עיבוד
 וידאו כבד בסביבת אינטרנט, נעשה שימוש בכלים המאפשרים מקביליות וביצועים
@@ -69,8 +85,9 @@
 
 לצורך יצירת מערך הנתונים, נעשה
 שימוש בפלטפורמת \textbf{\textenglish{Roboflow}}. הכלי שימש לתיוג ידני
-של הספרות, ביצוע העשרת נתונים (\textenglish{Augmentation}) וייצוא
+של הספרות, ביצוע אוגמנטציה (\textenglish{Augmentation}) וייצוא
 הנתונים בפורמטים המתאימים לאימון.
 
 \subsection{ריכוז הכלים וסביבות הפיתוח}
 בשל ריבוי הספריות והכלים בהם נעשה שימוש, ריכזתי את הפירוט הטכני המלא בטבלה \ref{tab:tools_full} המופיעה בנספח \ref{app:tools}.
+

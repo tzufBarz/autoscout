@@ -6,16 +6,26 @@
 \textenglish{FIRST}. כל רובוט מסומן ב־\textenglish{Bounding Box} שלו
 ומסווג לפי הברית שלו: כחול או אדום.
 
-על הנתונים יש אוגמנטציה שמכפילה את מספר תמונות האימון
-פי 3 כדי להגדיל את כמות הנתונים ולהוסיף גיוון כהכנה לתנאי צילום שונים:
+\begin{itemize}
+  \item \textbf{אוגמנטציה:} על הנתונים יש אוגמנטציה שמכפילה את מספר תמונות האימון
+  פי 3 כדי להגדיל את כמות הנתונים ולהוסיף גיוון כהכנה לתנאי צילום שונים:
+  \begin{english}
+    \begin{itemize}
+    \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal, \qty{+-10}{\degree} Vertical
+    \item \textbf{Brightness:} \qty{+-20}{\percent}
+    \item \textbf{Noise:} $\leq$ \qty{0.1}{\percent}
+    \end{itemize}
+  \end{english}
 
-\begin{english}
-  \begin{itemize}
-  \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal, \qty{+-10}{\degree} Vertical
-  \item \textbf{Brightness:} \qty{+-20}{\percent}
-  \item \textbf{Noise:} $\leq$ \qty{0.1}{\percent}
-  \end{itemize}
-\end{english}
+\item \textbf{עיבוד מקדים (\textenglish{Preprocessing}):} התמונה
+  נמתחת לגודל של \textenglish{640x640}. התמונה נשארת צבעונית כדי לשמור
+  על צבע הרובוטים לסיווג הברית, ונורמליזציה לטווח של 0--1 נעשית אוטומטית בתוך
+  \textenglish{YOLO}.
+
+\item \textbf{פיצול הנתונים:} הנתונים פוצלו למערכי אימון, ולידציה
+  ובדיקה בחלוקה של
+  \textenglish{\qty{89}{\percent}--\qty{7}{\percent}--\qty{4}{\percent}} בהתאמה.
+\end{itemize}
 
 \subsection{מודל זיהוי הספרות}
 
@@ -28,20 +38,34 @@
 ידי מודל זיהוי הרובוטים מסרטונים רשמיים כדי לדמות את הקלט האמיתי
 שהמודל יקבל.
 
-על הנתונים יש אוגמנטציה שמכפילה את מספר תמונות האימון
-פי 3, כדי להגדיל את כמות הנתונים ולהוסיף גיוון כהכנה לתנאי צילום
-שונים, לרובוטים שמופיעים בזוויות שונות ולחיתוכים לא מדויקים של הרובוט:
+תיוג הנתונים במערך זה לקח כשעתיים.
 
-\begin{english}
-  \begin{itemize}
-  \item \textbf{Crop:} $\leq$ \qty{10}{\percent}
-  \item \textbf{Rotation:} \qty{+-5}{\degree}
-  \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal,
-    \qty{+-5}{\degree} Vertical
-  \item \textbf{Brightness:} \qty{+-15}{\percent}
-  \item \textbf{Exposure:} \qty{+-10}{\percent}
-  \end{itemize}
-\end{english}
+\begin{itemize}
+
+\item \textbf{אוגמנטציה:} על הנתונים יש אוגמנטציה שמכפילה את מספר תמונות האימון
+  פי 3, כדי להגדיל את כמות הנתונים ולהוסיף גיוון כהכנה לתנאי צילום
+  שונים, לרובוטים שמופיעים בזוויות שונות ולחיתוכים לא מדויקים של הרובוט:
+  \begin{english}
+    \begin{itemize}
+    \item \textbf{Crop:} $\leq$ \qty{10}{\percent}
+    \item \textbf{Rotation:} \qty{+-5}{\degree}
+    \item \textbf{Shear:} \qty{+-10}{\degree} Horizontal,
+      \qty{+-5}{\degree} Vertical
+    \item \textbf{Brightness:} \qty{+-15}{\percent}
+    \item \textbf{Exposure:} \qty{+-10}{\percent}
+    \end{itemize}
+  \end{english}
+
+\item \textbf{עיבוד מקדים (\textenglish{Preprocessing}):} התמונה
+  מוגדלת לגודל של \textenglish{128x128} באמצעות
+  \textenglish{Letterboxing} עם פיקסלים שחורים. התמונה נשארת צבעונית כדי
+  לשמור על צבע הבאמפר לזיהוי הספרות שעליו, ונורמליזציה לטווח של 0--1 נעשית אוטומטית בתוך
+  \textenglish{YOLO}.
+
+\item \textbf{פיצול הנתונים:} בגלל הכמות הקטנה יחסית, הנתונים פוצלו למערכי אימון, ולידציה
+  ובדיקה בחלוקה של
+  \textenglish{\qty{94}{\percent}--\qty{4}{\percent}--\qty{2}{\percent}} בהתאמה.
+\end{itemize}
 
 \subsection{דוגמאות מתוך מערך הנתונים}
 
@@ -52,5 +76,51 @@
 \subsection{התפלגות מחלקות}
 
 מערך הנתונים כולל איזון בין רובוטים מהברית הכחולה לאדומה, ודגימות של
-כל הספרות (0-9) במגוון זוויות צילום ותנאי תאורה, כדי להבטיח הכללה
+כל הספרות (0--9) במגוון זוויות צילום ותנאי תאורה, כדי להבטיח הכללה
 (\textenglish{Generalization}) טובה של המודל.
+
+להלן התפלגויות הדגימות בשני מערכי הנתונים. ניתן לראות כי המערך מאוזן
+יחסית, מה שמסייע במניעת הטיות (Bias) של המודל.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.4\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.8\textwidth,
+        scale only axis,
+        ybar,
+        xlabel={\texthebrew{מחלקה}},
+        ylabel={\texthebrew{כמות}},
+        symbolic x coords={כחול, אדום},
+        xtick=data,
+        ymin=0,
+        nodes near coords,
+        ]
+        \addplot coordinates {(כחול, 3701) (אדום, 3776)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{התפלגות המחלקות של מודל הרובוטים.}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.4\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.8\textwidth,
+        scale only axis,
+        ybar,
+        xlabel={\texthebrew{מחלקה}},
+        ylabel={\texthebrew{כמות}},
+        symbolic x coords={0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+        xtick=data,
+        ymin=0,
+        nodes near coords,
+        ]
+        \addplot coordinates {(0, 178) (1, 293) (2, 140) (3, 175) (4, 221) (5, 179) (6, 183) (7, 124) (8, 130) (9, 162)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{התפלגות המחלקות של מודל הספרות.}
+  \end{minipage}
+\end{figure}

@@ -7,22 +7,22 @@
   \begin{tabular}{|p{0.19\textwidth}|p{0.12\textwidth}|p{0.31\textwidth}|p{0.16\textwidth}|}
     \hline
     \textbf{כלי / ספרייה} & \textbf{גרסה} & \textbf{שימוש בפרויקט} & \textbf{סביבה} \\ \hline
-    \textenglish{Python} & [להשלים] & שפת הפיתוח המרכזית של צד השרת והמודלים & \textenglish{Backend} \\ \hline
-    \textenglish{Git} & [להשלים] & ניהול גרסאות הקוד במהלך הפיתוח & \textenglish{Development} \\ \hline
+    \textenglish{Python} & 3.10 & שפת הפיתוח המרכזית של צד השרת והמודלים & \textenglish{Backend} \\ \hline
+    \textenglish{Git} & 2.53.0 & ניהול גרסאות הקוד במהלך הפיתוח & \textenglish{Development} \\ \hline
     \textenglish{Google Colab} & --- & אימון המודלים על \textenglish{GPU} & \textenglish{Training} \\ \hline
     \textenglish{Roboflow} & --- & תיוג נתונים וניהול ה־\textenglish{Dataset} & \textenglish{Training} \\ \hline
-    \textenglish{FastAPI} & [להשלים] & תשתית השרת וניהול המשימות & \textenglish{Infrastructure} \\ \hline
-    \textenglish{Uvicorn} & [להשלים] & מנוע הרצת השרת (\textenglish{ASGI}) & \textenglish{Infrastructure} \\ \hline
+    \textenglish{FastAPI} & 0.135.2 & תשתית השרת וניהול המשימות & \textenglish{Infrastructure} \\ \hline
+    \textenglish{Uvicorn} & 0.42.0 & מנוע הרצת השרת (\textenglish{GI}) & \textenglish{Infrastructure} \\ \hline
     \textenglish{asyncio} & --- & ניהול מקביליות ופעולות אסינכרוניות & \textenglish{Infrastructure} \\ \hline
-    \textenglish{Ultralytics} & [להשלים] & מודלי זיהוי אובייקטים וספרות & \textenglish{Backend} \\ \hline
-    \textenglish{Levenshtein} & [להשלים] & אלגוריתם לתיקון שגיאות זיהוי & \textenglish{Backend} \\ \hline
-    \textenglish{OpenCV} & [להשלים] & עיבוד תמונה וניהול זרם וידאו & \textenglish{Backend} \\ \hline
-    \textenglish{NumPy} & [להשלים] & חישובים מספריים ומבני נתונים למטריצות & \textenglish{Backend} \\ \hline
-    \textenglish{SciPy} & [להשלים] & החלקה ואינטרפולציה של מסלולים & \textenglish{Backend} \\ \hline
-    \textenglish{Flutter} & [להשלים] & פיתוח ממשק המשתמש הוויזואלי & \textenglish{Frontend} \\ \hline
-    \textenglish{dio} & [להשלים] & שליחת בקשות \textenglish{HTTP} והעלאת קבצים & \textenglish{Frontend} \\ \hline
-    \textenglish{media\_kit} & [להשלים] & ניגון והצגת תוצאות הוידאו & \textenglish{Frontend} \\ \hline
-    \textenglish{file\_picker} & [להשלים] & בחירת סרטוני מקצים ממכשיר המשתמש & \textenglish{Frontend} \\ \hline
+    \textenglish{Ultralytics} & 8.4.33 & מודלי זיהוי אובייקטים וספרות & \textenglish{Backend} \\ \hline
+    \textenglish{Levenshtein} & 0.27.3 & אלגוריתם לתיקון שגיאות זיהוי & \textenglish{Backend} \\ \hline
+    \textenglish{OpenCV} & 4.13.0.92 & עיבוד תמונה וניהול זרם וידאו & \textenglish{Backend} \\ \hline
+    \textenglish{NumPy} & 2.2.6 & חישובים מספריים ומבני נתונים למטריצות & \textenglish{Backend} \\ \hline
+    \textenglish{SciPy} & 1.15.3 & החלקה ואינטרפולציה של מסלולים & \textenglish{Backend} \\ \hline
+    \textenglish{Flutter} & 3.41.6 & פיתוח ממשק המשתמש הוויזואלי & \textenglish{Frontend} \\ \hline
+    \textenglish{dio} & 5.9.2 & שליחת בקשות \textenglish{HTTP} והעלאת קבצים & \textenglish{Frontend} \\ \hline
+    \textenglish{media\_kit} & 1.2.6 & ניגון והצגת תוצאות הוידאו & \textenglish{Frontend} \\ \hline
+    \textenglish{file\_picker} & 10.3.10 & בחירת סרטוני מקצים ממכשיר המשתמש & \textenglish{Frontend} \\ \hline
   \end{tabular}
   \caption{פירוט טכנולוגי מלא של רכיבי המערכת.}
   \label{tab:tools_full}
@@ -47,6 +47,68 @@
   \label{fig:digits_sample}
 \end{figure}
 
+\subsection{ארכיטקטורת המערכת} \label{app:architecture}
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.2cm and 1.5cm,
+        base/.style={draw=black!70, thick, rectangle, rounded corners, align=center, font=\small, minimum height=0.8cm, inner sep=8pt},
+        input/.style={base, fill=blue!10},
+        model/.style={base, fill=green!10},
+        logic/.style={base, fill=orange!10},
+        output/.style={base, fill=purple!10},
+        arrow/.style={-{Stealth[scale=1.2]}, thick, draw=black!80}
+    ]
+
+    \node (video) [input] {\texthebrew{קלט: סרטון וידאו} \\ \textenglish{(Full Match Feed)}};
+    \node (yolo_robot) [model, below=of video] {\texthebrew{\textenglish{YOLO26}: זיהוי רובוטים} \\ \texthebrew{וסיווג בריתות}};
+    \node (bytetrack) [model, below=of yolo_robot] {\texthebrew{ByteTrack: מעקב אובייקטים} \\ \textenglish{(Track IDs)}};
+    
+    \node (yolo_digits) [model, right=of bytetrack, xshift=1.5cm] {\texthebrew{\textenglish{YOLO26}: זיהוי ספרות} \\ \texthebrew{(חיתוכי באמפרים)}};
+    
+    \node (voting) [logic, below=of bytetrack, yshift=-0.5cm] {\texthebrew{מנגנון הצבעה וזיהוי קבוצה} \\ \textenglish{(Levenshtein + Logic)}};
+    \node (smoothing) [logic, below=of voting] {\texthebrew{אינטרפולציה והחלקה גאוסית}};
+    \node (final) [output, below=of smoothing] {\texthebrew{פלט: מסלולים מוחלקים} \\ \texthebrew{תצוגת \textenglish{Replay} באפליקצייה}};
+
+    \draw [arrow] (video) -- (yolo_robot);
+    \draw [arrow] (yolo_robot) -- (bytetrack);
+    \draw [arrow] (bytetrack.east) -- (yolo_digits.west) node[midway, above, font=\tiny] {\texthebrew{גזירת תמונות}};
+    \draw [arrow] (yolo_digits.south) |- (voting.east) node[near start, right, font=\tiny, xshift=5pt] {\texthebrew{ספרות חזויות}};
+    \draw [arrow] (bytetrack) -- (voting) node[midway, left, font=\tiny] {\texthebrew{נתוני מעקב}};
+    \draw [arrow] (voting) -- (smoothing);
+    \draw [arrow] (smoothing) -- (final);
+
+    \end{tikzpicture}
+    \caption{תרשים זרימת הנתונים במערכת.}
+    \label{fig:pipeline_flow}
+\end{figure}
+
+\subsection{תרשימי אימון ותוצאות} \label{app:training}
+
+\begin{figure}[H] \centering
+  \includegraphics[width=1.0\textwidth]{robots-results}
+  \caption{גרפי האימון של מודל זיהוי הרובוטים.}
+  \label{fig:robots_results}
+\end{figure}
+
+\begin{figure}[H] \centering
+  \includegraphics[width=1.0\textwidth]{robots-confusion}
+  \caption{מטריצת הבלבול (\textenglish{Confusion Matrix}) של מודל זיהוי הרובוטים.}
+  \label{fig:robots_confusion}
+\end{figure}
+
+\begin{figure}[H] \centering
+  \includegraphics[width=1.0\textwidth]{digits-results}
+  \caption{גרפי האימון של מודל זיהוי הספרות.}
+  \label{fig:digits_results}
+\end{figure}
+
+\begin{figure}[H] \centering
+  \includegraphics[width=1.0\textwidth]{digits-confusion}
+  \caption{מטריצת הבלבול (\textenglish{Confusion Matrix}) של מודל זיהוי הספרות.}
+  \label{fig:digits_confusion}
+\end{figure}
+
 \subsection{קטעי קוד} \label{app:listings}
 
 \begin{listing}[H]
@@ -57,3 +119,62 @@
     \inputminted{python}{build/snippets/voting_system.py}
   \end{english}
 \end{listing}
+
+\subsection{צילומי מסך} \label{app:application}
+\begin{figure}[H] \centering
+  \includegraphics[width=1.0\textwidth]{app-progress}
+  \caption{צילום מסך של תהליך הרצת העיבוד באפליקציה.}
+  \label{fig:app_progress}
+\end{figure}
+
+\begin{figure}[H] \centering
+  \includegraphics[width=1.0\textwidth]{app-replay}
+  \caption{צילום מסך של תצוגת ה־\textenglish{Replay} והמסלולים שהמערכת מפיקה.}
+  \label{fig:app_replay}נ
+\end{figure}
+
+\subsection{דוגמאות להצלחות וכישלונות} \label{app:success_failure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.9\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{robots-success-occluded}
+    \caption{זיהוי רובוטים מוסתרים חלקית}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.9\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{robots-success-blur}
+    \caption{זיהוי רובוטים בתנועה מהירה}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{digits-success-lowres}
+    \caption{זיהוי ספרות ברזולוציה נמוכה}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{digits-success-partcrop}
+    \caption{זיהוי ספרות על רובוט חתוך חלקית}
+  \end{subfigure}
+  \caption{דוגמאות להצלחות של המודלים}
+  \label{fig:success}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.9\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{robots-failure-occluded}
+    \caption{זיהוי רובוט מוסתר כמעט לגמרי}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{digits-failure-blur}
+    \caption{זיהוי ספרות מטושטשות}
+  \end{subfigure}
+  \caption{דוגמאות לכישלונות של המודלים}
+  \label{fig:failure}
+\end{figure}
