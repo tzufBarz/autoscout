@@ -47,67 +47,47 @@
   \label{fig:digits_sample}
 \end{figure}
 
-\subsection{ארכיטקטורת המערכת} \label{app:architecture}
-\begin{figure}[H]
-    \centering
-    \begin{tikzpicture}[
-        node distance=1.2cm and 1.5cm,
-        base/.style={draw=black!70, thick, rectangle, rounded corners, align=center, font=\small, minimum height=0.8cm, inner sep=8pt},
-        input/.style={base, fill=blue!10},
-        model/.style={base, fill=green!10},
-        logic/.style={base, fill=orange!10},
-        output/.style={base, fill=purple!10},
-        arrow/.style={-{Stealth[scale=1.2]}, thick, draw=black!80}
-    ]
-
-    \node (video) [input] {\texthebrew{קלט: סרטון וידאו} \\ \textenglish{(Full Match Feed)}};
-    \node (yolo_robot) [model, below=of video] {\texthebrew{\textenglish{YOLO26}: זיהוי רובוטים} \\ \texthebrew{וסיווג בריתות}};
-    \node (bytetrack) [model, below=of yolo_robot] {\texthebrew{ByteTrack: מעקב אובייקטים} \\ \textenglish{(Track IDs)}};
-    
-    \node (yolo_digits) [model, right=of bytetrack, xshift=1.5cm] {\texthebrew{\textenglish{YOLO26}: זיהוי ספרות} \\ \texthebrew{(חיתוכי באמפרים)}};
-    
-    \node (voting) [logic, below=of bytetrack, yshift=-0.5cm] {\texthebrew{מנגנון הצבעה וזיהוי קבוצה} \\ \textenglish{(Levenshtein + Logic)}};
-    \node (smoothing) [logic, below=of voting] {\texthebrew{אינטרפולציה והחלקה גאוסית}};
-    \node (final) [output, below=of smoothing] {\texthebrew{פלט: מסלולים מוחלקים} \\ \texthebrew{תצוגת \textenglish{Replay} באפליקצייה}};
-
-    \draw [arrow] (video) -- (yolo_robot);
-    \draw [arrow] (yolo_robot) -- (bytetrack);
-    \draw [arrow] (bytetrack.east) -- (yolo_digits.west) node[midway, above, font=\tiny] {\texthebrew{גזירת תמונות}};
-    \draw [arrow] (yolo_digits.south) |- (voting.east) node[near start, right, font=\tiny, xshift=5pt] {\texthebrew{ספרות חזויות}};
-    \draw [arrow] (bytetrack) -- (voting) node[midway, left, font=\tiny] {\texthebrew{נתוני מעקב}};
-    \draw [arrow] (voting) -- (smoothing);
-    \draw [arrow] (smoothing) -- (final);
-
-    \end{tikzpicture}
-    \caption{תרשים זרימת הנתונים במערכת.}
-    \label{fig:pipeline_flow}
-\end{figure}
-
 \subsection{תרשימי אימון ותוצאות} \label{app:training}
 
 \begin{figure}[H] \centering
-  \includegraphics[width=1.0\textwidth]{robots-results}
-  \caption{גרפי האימון של מודל זיהוי הרובוטים.}
-  \label{fig:robots_results}
-\end{figure}
-
-\begin{figure}[H] \centering
-  \includegraphics[width=1.0\textwidth]{robots-confusion}
+  \includegraphics[width=0.8\textwidth]{robots-confusion}
   \caption{מטריצת הבלבול (\textenglish{Confusion Matrix}) של מודל זיהוי הרובוטים.}
   \label{fig:robots_confusion}
 \end{figure}
 
 \begin{figure}[H] \centering
-  \includegraphics[width=1.0\textwidth]{digits-results}
-  \caption{גרפי האימון של מודל זיהוי הספרות.}
-  \label{fig:digits_results}
-\end{figure}
-
-\begin{figure}[H] \centering
-  \includegraphics[width=1.0\textwidth]{digits-confusion}
+  \includegraphics[width=0.8\textwidth]{digits-confusion}
   \caption{מטריצת הבלבול (\textenglish{Confusion Matrix}) של מודל זיהוי הספרות.}
   \label{fig:digits_confusion}
 \end{figure}
+
+\begin{table}[H] \centering
+  \begin{tabular}{|c|c|c|c|c|} \hline
+    \textbf{מחלקה} & \textbf{Precision} & \textbf{Recall} & \textbf{mAP@50} & \textbf{mAP@50-95} \\ \hline
+    סה''כ & 0.93 & 0.94 & 0.97 & 0.66 \\ \hline
+    כחול & 0.92 & 0.95 & 0.96 & 0.65 \\ \hline
+    אדום & 0.94 & 0.94 & 0.98 & 0.68 \\ \hline
+  \end{tabular}
+  \caption{טבלת תוצאות האימון של מודל זיהוי הרובוטים על סט הבדיקה.}
+\end{table}
+
+\begin{table}[H] \centering
+  \begin{tabular}{|c|c|c|c|c|} \hline
+    \textbf{מחלקה} & \textbf{Precision} & \textbf{Recall} & \textbf{mAP@50} & \textbf{mAP@50-95} \\ \hline
+    סה''כ & 0.75 & 0.78 & 0.85 & 0.43 \\ \hline
+    0 & 0.65 & 0.83 & 0.92 & 0.44 \\ \hline
+    1 & 0.87 & 0.75 & 0.88 & 0.41 \\ \hline
+    2 & 0.68 & 0.71 & 0.79 & 0.41 \\ \hline
+    3 & 0.78 & 0.88 & 0.91 & 0.44 \\ \hline
+    4 & 0.80 & 0.86 & 0.86 & 0.44 \\ \hline
+    5 & 0.80 & 1.0 & 0.93 & 0.54 \\ \hline
+    6 & 0.89 & 0.69 & 0.90 & 0.44 \\ \hline
+    7 & 0.84 & 0.63 & 0.90 & 0.45 \\ \hline
+    8 & 0.65 & 0.48 & 0.58 & 0.22 \\ \hline
+    9 & 0.55 & 0.94 & 0.83 & 0.54 \\ \hline
+  \end{tabular}
+  \caption{טבלת תוצאות האימון של מודל זיהוי הספרות על סט הבדיקה.}
+\end{table}
 
 \subsection{קטעי קוד} \label{app:listings}
 
