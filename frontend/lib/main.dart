@@ -68,7 +68,7 @@ class _UploadPageState extends State<UploadPage> {
       });
 
       final response = await dio.post(
-        'http://192.168.1.160:8000/upload',
+        'http://localhost:8000/upload',
         data: formData,
       );
 
@@ -198,7 +198,7 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
   }
 
   Future<void> _poll() async {
-    final response = await Dio().get('http://192.168.1.160:8000/status/${widget.jobId}');
+    final response = await Dio().get('http://localhost:8000/status/${widget.jobId}');
     final data = response.data;
     setState(() {
       _status = data['status'];
