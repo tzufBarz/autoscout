@@ -25,7 +25,7 @@ BETA = 1 - ALPHA
 
 TEAM_RAW_THRESH = 0.75
 
-MARGIN_SCALE = 0.5
+MARGIN_SCALE = 0.9
 
 ALLIANCE_MASK = (np.arange(6) // 3)
 
