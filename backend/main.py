@@ -104,7 +104,9 @@ async def process(job_id: UUID, path: str, match: int):
             jobs[job_id] = {"status": "error", "result": str(e)}
 
 
+# <<digit_detection>>
 def detect_digits(crops: list, digit_model: YOLO, conf_thresh=0.2) -> list[str | None]:
+    # <</digit_detection>>
     """
     Use batched inference to detect digits on cropped robot images.
     Args:
@@ -114,6 +116,7 @@ def detect_digits(crops: list, digit_model: YOLO, conf_thresh=0.2) -> list[str |
     Returns:
         A list containing a string of the digits detected from left to right, for each image.
     """
+    # <<digit_detection>>
     if not crops:
         return []
 
@@ -138,6 +141,7 @@ def detect_digits(crops: list, digit_model: YOLO, conf_thresh=0.2) -> list[str |
         output.append("".join(str(d[1]) for d in sorted(digits, key=lambda d: d[0])))
     
     return output
+    # <</digit_detection>>
 
 
 def digit_scores(digits: str, teams: list[str]) -> np.ndarray:
@@ -158,8 +162,9 @@ def digit_scores(digits: str, teams: list[str]) -> np.ndarray:
         scores[i] = score
     return scores
 
-
+# <<voting_system>>
 def update(track: int, teams: list[str], alliance: int, digits: str, timestamp: float, track_votes: dict, track_teams: dict[int, list[tuple[float, int]]], team_tracks: np.ndarray, lost_ids: set, pair_difficulties: np.ndarray) -> None:
+    # <</voting_system>>
     """
     Update an unrecognized track's votes and match to a team when possible.
     Args:
@@ -306,13 +311,17 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
     tracker = None
 
     with tqdm(total=frame_count) as pbar:
+    # <<core_loop>>
         while cap.isOpened():
             success, frame = cap.read()
             if not success or frame is None:
                 break
+            # <</core_loop>>
 
             timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
             frame_idx = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+
+            # <<core_loop>>
             results = model.track(
                 source=frame,
                 persist=True,
@@ -322,6 +331,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
             )
 
             result = results[0]
+            # <</core_loop>>
 
 
             if not result.boxes or result.boxes.xyxy is None or result.boxes.id is None or result.boxes.cls is None:
@@ -372,10 +382,12 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
                         team_tracks[team_tracks == tid] = 0
                         unconfirmed_this_frame.add(tid)
 
+            # <<core_loop>>
             crops = []
             crop_tracks = []
 
             for i, box in enumerate(boxes):
+                # <</core_loop>>
                 x1, y1, x2, y2 = map(int, box)
                 tid = int(ids[i])
                 alliance = int(classes[i])
@@ -386,6 +398,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
                     track_positions[tid] = []
                 track_positions[tid].append((timestamp, cx, cy))
                 
+                # <<core_loop>>
                 if (tid not in team_tracks) and y2 > y1 and x2 > x1:
                     crops.append(result.orig_img[y1:y2, x1:x2])
                     crop_tracks.append((tid, alliance))
@@ -396,6 +409,7 @@ def run_pipeline(video_path: str, match_number: int, progress_callback=None) -> 
                 if digits:
                     tid, alliance = track
                     update(tid, teams, alliance, digits, timestamp, track_votes, track_teams, team_tracks, lost_ids, pair_difficulties)
+            # <</core_loop>>
 
             pbar.update()
             if progress_callback:
