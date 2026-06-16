@@ -43,7 +43,7 @@ schedule = {
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Load models
-model = YOLO(os.path.join(BASE_DIR, "models/robots-nano_26_04_22.pt"))
+model = YOLO(os.path.join(BASE_DIR, "models/robots-nano_26_05_04.pt"))
 digit_model = YOLO(os.path.join(BASE_DIR, "models/digits-small_26_04_21.pt"))
 
 # FastAPI setup
