@@ -202,7 +202,7 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
     final data = response.data;
     setState(() {
       _status = data['status'];
-      if (_status == 'processing') {
+      if (_status == 'processing' || _status == 'queued') {
         _realFrame = data['progress']?['frame']?.toInt() ?? _realFrame;
         _estimatedFrame = _realFrame.toDouble();
         _itPerS = data['progress']?['it_per_s']?.toDouble() ?? 0;
@@ -223,17 +223,17 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _status != 'processing',
+      canPop: _status != 'processing' && _status != 'queued',
       child: Scaffold(
         appBar: AppBar(
           title: Text('AutoScout: $_status'),
           centerTitle: true,
-          automaticallyImplyLeading: _status != 'processing',
+          automaticallyImplyLeading: _status != 'processing' && _status != 'queued',
         ),
         body: Center(
           child: Padding(
             padding: EdgeInsets.all(16),
-            child: _status == 'processing' ? Column(
+            child: _status == 'processing' || _status == 'queued' ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(

@@ -51,6 +51,8 @@ app = FastAPI()
 
 jobs = {}
 
+job_semaphore = asyncio.Semaphore(1)
+
 @app.post("/upload")
 async def upload(file: Annotated[UploadFile, File(description="The video file")], match: Annotated[int, Form(description="The match number")]):
     """
@@ -65,7 +67,7 @@ async def upload(file: Annotated[UploadFile, File(description="The video file")]
     path = f"/tmp/{job_id}.mp4"
     with open(path, "wb") as f:
         shutil.copyfileobj(file.file, f)
-    jobs[job_id] = {"status": "processing", "result": None, "progress": None}
+    jobs[job_id] = {"status": "queued", "result": None, "progress": None}
     asyncio.create_task(process(job_id, path, match))
     return {"job_id": job_id}
 
@@ -88,15 +90,18 @@ async def process(job_id: UUID, path: str, match: int):
         path: The video file's path.
         match: The match number.
     """
-    try:
-        def progress_callback(info: dict):
-            jobs[job_id]["progress"] = info
+    async with job_semaphore:
+        jobs[job_id]["status"] = "processing"
+        
+        try:
+            def progress_callback(info: dict):
+                jobs[job_id]["progress"] = info
 
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, run_pipeline, path, match, progress_callback)
-        jobs[job_id] = {"status": "done", "result": result}
-    except Exception as e:
-        jobs[job_id] = {"status": "error", "result": str(e)}
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, run_pipeline, path, match, progress_callback)
+            jobs[job_id] = {"status": "done", "result": result}
+        except Exception as e:
+            jobs[job_id] = {"status": "error", "result": str(e)}
 
 
 def detect_digits(crops: list, digit_model: YOLO, conf_thresh=0.2) -> list[str | None]:
